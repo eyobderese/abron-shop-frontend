@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Noto Sans Ethiopic', system-ui, -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #111111;
+  background: #ffffff;
+}
+
+/* Amharic glyphs render best in Noto Sans Ethiopic even inside English text. */
+:lang(am),
+.font-amharic {
+  font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif;
+}
+
+a {
+  color: inherit;
+}
