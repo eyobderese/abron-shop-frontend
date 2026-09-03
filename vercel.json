@@ -16,6 +16,10 @@
   ],
   "rewrites": [
     {
+      "source": "/product/:id",
+      "destination": "https://api.abronshop.online/api/v1/seo/product-redirect/:id"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "https://api.abronshop.online/api/v1/seo/sitemap.xml"
     },

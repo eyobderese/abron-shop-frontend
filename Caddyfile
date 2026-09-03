@@ -17,6 +17,13 @@
         }
     }
 
+    handle /product/* {
+        uri replace /product/ /api/v1/seo/product-redirect/
+        reverse_proxy {$API_ORIGIN:https://api.abronshop.online} {
+            header_up Host {upstream_hostport}
+        }
+    }
+
     handle {
         root * /srv
         try_files {path} /index.html

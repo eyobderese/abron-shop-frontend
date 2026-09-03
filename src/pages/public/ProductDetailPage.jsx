@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useProduct } from '../../hooks/useProducts';
 import { useCategories, getAncestors } from '../../hooks/useCategories';
@@ -23,8 +23,9 @@ function pct(was, now) {
 }
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
-  const { product, loading, error } = useProduct(id);
+  const { slug, id } = useParams();
+  const identifier = slug || id;
+  const { product, loading, error } = useProduct(identifier);
   const { categories } = useCategories();
   const { lang } = useLang();
   const d = dict(lang);
@@ -66,6 +67,10 @@ export default function ProductDetailPage() {
     );
   }
 
+  if (product.slug && identifier !== product.slug) {
+    return <Navigate to={`/products/${product.slug}`} replace />;
+  }
+
   const localName = productLocalName(product, lang);
   const localDesc = productLocalDescription(product, lang);
 
@@ -73,7 +78,7 @@ export default function ProductDetailPage() {
     ? getAncestors(categories, product.category_id)
     : [];
   const off = pct(product.was_price, product.price);
-  const productPath = `/product/${product.id}`;
+  const productPath = `/products/${product.slug}`;
   const productUrl = pageUrl(productPath);
   const imageUrls = getProductViews(product)
     .map((view) => absoluteUrl(view.url))
