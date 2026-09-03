@@ -22,12 +22,13 @@ export function getProductViews(product) {
 
   const raw = product.image_views;
   if (Array.isArray(raw) && raw.length > 0) {
-    return raw
+    const normalized = raw
       .filter((v) => v && v.url)
       .map((v) => ({
         url: v.url,
         label: v.label || defaultViewLabel(0),
       }));
+    if (normalized.length > 0) return normalized;
   }
 
   const legacy = product.images;
