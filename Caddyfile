@@ -1,9 +1,27 @@
 :80 {
     encode zstd gzip
 
-    root * /srv
-    try_files {path} /index.html
-    file_server
+    @www host www.abronshop.online
+    redir @www https://abronshop.online{uri} permanent
+    redir /shoes /category/shoes permanent
+    redir /clothes /category/clothes permanent
+    redir /cosmetics /category/cosmetics permanent
+
+    @noindex path /admin* /search*
+    header @noindex X-Robots-Tag "noindex, follow"
+
+    handle /sitemap.xml {
+        rewrite * /api/v1/seo/sitemap.xml
+        reverse_proxy {$API_ORIGIN:https://api.abronshop.online} {
+            header_up Host {upstream_hostport}
+        }
+    }
+
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
 
     header {
         X-Content-Type-Options nosniff

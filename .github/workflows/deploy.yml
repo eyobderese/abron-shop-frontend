@@ -35,6 +35,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: https://api.abronshop.online/api/v1
+          VITE_SITE_URL: https://abronshop.online
 
   deploy:
     name: Deploy frontend

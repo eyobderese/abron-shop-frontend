@@ -14,6 +14,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
 import { catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import Seo, { pageUrl } from '../../components/seo/Seo';
 
 function FilterPanel({
   sidebarRoots,
@@ -199,7 +200,14 @@ export default function CategoryPage() {
 
   if (!currentCat) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+      <>
+        <Seo
+          title="Category Not Found"
+          description="The requested Abron Shop category could not be found."
+          canonical={false}
+          noindex
+        />
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-ink mb-2">
           Category not found
         </h1>
@@ -211,7 +219,8 @@ export default function CategoryPage() {
         <Link to="/" className="text-ink underline">
           Back home · {d.home}
         </Link>
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -224,9 +233,32 @@ export default function CategoryPage() {
     setSort,
     lang,
   };
+  const categoryPath = `/category/${currentCat.slug}`;
+  const categoryDescription = `Shop ${currentCat.name_en} products from authentic American brands, available through Abron Shop for delivery to Ethiopia.`;
+  const breadcrumbItems = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: pageUrl('/') },
+    ...ancestors.map((category, index) => ({
+      '@type': 'ListItem',
+      position: index + 2,
+      name: category.name_en,
+      item: pageUrl(`/category/${category.slug}`),
+    })),
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <>
+      <Seo
+        title={`${currentCat.name_en} Products`}
+        description={categoryDescription}
+        path={categoryPath}
+        image={currentCat.image_url}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: breadcrumbItems,
+        }}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center flex-wrap gap-1 text-xs text-ink-muted mb-4">
         <Link to="/" className="hover:text-ink">
@@ -334,6 +366,7 @@ export default function CategoryPage() {
           </aside>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

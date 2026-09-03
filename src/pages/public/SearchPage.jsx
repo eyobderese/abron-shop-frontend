@@ -5,6 +5,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
 import { dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import Seo from '../../components/seo/Seo';
 
 export default function SearchPage() {
   const [params] = useSearchParams();
@@ -16,7 +17,14 @@ export default function SearchPage() {
   const { products, loading } = useProducts({ search: q });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <>
+      <Seo
+        title={q ? `Search results for ${q}` : 'Search'}
+        description="Search the Abron Shop product catalog."
+        path="/search"
+        noindex
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <header className="mb-6">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-ink">
           Search
@@ -58,6 +66,7 @@ export default function SearchPage() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

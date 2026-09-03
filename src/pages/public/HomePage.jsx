@@ -6,6 +6,7 @@ import ProductCard from '../../components/ui/ProductCard';
 import AdSlot from '../../components/ui/AdSlot';
 import { dict, catLocal } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import Seo, { SITE_URL } from '../../components/seo/Seo';
 
 function DealStrip({ lang }) {
   const d = dict(lang);
@@ -44,6 +45,24 @@ export default function HomePage() {
   const preview = tree.slice(0, 3);
   const womenCat = categories.find((c) => c.slug === 'women');
   const menCat = categories.find((c) => c.slug === 'men');
+  const description =
+    'Shop authentic American brand shoes, clothing, beauty products and more, delivered from the USA to Ethiopia. Browse products and send an inquiry.';
+  const structuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Abron Shop',
+      url: SITE_URL,
+      logo: `${SITE_URL}/favicon.svg`,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Abron Shop',
+      alternateName: 'አብሮን ሱቅ',
+      url: SITE_URL,
+    },
+  ];
 
   function shopCategoryBtnLabel(cat, enName, dictKey) {
     const local = catLocal(cat, lang) || dict(lang)[dictKey];
@@ -66,7 +85,14 @@ export default function HomePage() {
   }
 
   return (
-    <div>
+    <>
+      <Seo
+        title="Abron Shop · Authentic American Brands Delivered to Ethiopia"
+        description={description}
+        path="/"
+        jsonLd={structuredData}
+      />
+      <div>
       <DealStrip lang={lang} />
 
       {/* Hero */}
@@ -328,6 +354,7 @@ export default function HomePage() {
           </Link>
         </section>
       )}
-    </div>
+      </div>
+    </>
   );
 }

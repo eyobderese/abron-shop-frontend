@@ -1,5 +1,24 @@
 {
+  "redirects": [
+    { "source": "/shoes", "destination": "/category/shoes", "permanent": true },
+    { "source": "/clothes", "destination": "/category/clothes", "permanent": true },
+    { "source": "/cosmetics", "destination": "/category/cosmetics", "permanent": true }
+  ],
+  "headers": [
+    {
+      "source": "/admin/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
+    },
+    {
+      "source": "/search",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.abronshop.online/api/v1/seo/sitemap.xml"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
