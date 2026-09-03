@@ -31,3 +31,5 @@ curl -fsS https://abronshop.online/sitemap.xml
 ```
 
 The first response should redirect to the apex domain, the admin response should contain `X-Robots-Tag: noindex, follow`, and both SEO files should be available publicly.
+
+When deploying the product-slug migration, deploy the backend first. Its startup command applies the committed Prisma migration and backfills existing products. After the backend health check succeeds, deploy the frontend. Existing `/product/UUID` links will then redirect permanently to `/products/readable-slug`.

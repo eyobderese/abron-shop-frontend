@@ -23,7 +23,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={product.slug ? `/products/${product.slug}` : `/product/${product.id}`}
       className="group block no-underline"
     >
       <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">

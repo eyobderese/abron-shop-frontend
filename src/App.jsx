@@ -62,6 +62,8 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
+            <Route path="/products/:slug" element={<ProductDetailPage />} />
+            {/* Compatibility fallback for local/static hosting. Production Caddy sends a 301. */}
             <Route path="/product/:id" element={<ProductDetailPage />} />
 
             {/* Legacy redirects */}

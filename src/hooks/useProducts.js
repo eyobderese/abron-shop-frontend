@@ -44,20 +44,20 @@ export function useProducts(opts = {}) {
   return { products, loading, error };
 }
 
-export function useProduct(id) {
+export function useProduct(identifier) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!identifier) return;
     let cancelled = false;
-    api.get(`/products/${encodeURIComponent(id)}`)
+    api.get(`/products/${encodeURIComponent(identifier)}`)
       .then((data) => { if (!cancelled) setProduct(data); })
       .catch((err) => { if (!cancelled) setError(err.message); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [id]);
+  }, [identifier]);
 
   return { product, loading, error };
 }
