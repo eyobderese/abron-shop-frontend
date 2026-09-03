@@ -12,6 +12,8 @@ import {
   productLocalDescription,
 } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
+import { getProductViews } from '../../lib/productViews';
 
 function pct(was, now) {
   const w = Number(was);
@@ -28,11 +30,30 @@ export default function ProductDetailPage() {
   const d = dict(lang);
   const amharic = lang !== 'or';
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <>
+        <Seo
+          title="Loading Product"
+          description="Loading product information from Abron Shop."
+          canonical={false}
+          noindex
+        />
+        <LoadingSpinner />
+      </>
+    );
+  }
 
   if (error || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+      <>
+        <Seo
+          title="Product Not Found"
+          description="The requested Abron Shop product could not be found."
+          canonical={false}
+          noindex
+        />
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-ink mb-2">Product Not Found</h1>
         <p className="text-ink-muted mb-6">
           The product you&apos;re looking for doesn&apos;t exist or has been removed.
@@ -40,7 +61,8 @@ export default function ProductDetailPage() {
         <Link to="/" className="text-ink underline">
           Back to Home · {d.home}
         </Link>
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -51,9 +73,66 @@ export default function ProductDetailPage() {
     ? getAncestors(categories, product.category_id)
     : [];
   const off = pct(product.was_price, product.price);
+  const productPath = `/product/${product.id}`;
+  const productUrl = pageUrl(productPath);
+  const imageUrls = getProductViews(product)
+    .map((view) => absoluteUrl(view.url))
+    .filter(Boolean);
+  const productDescription = product.description ||
+    `View ${product.name}, availability and delivery information from Abron Shop.`;
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: productDescription,
+    url: productUrl,
+    ...(imageUrls.length > 0 && { image: imageUrls }),
+    ...(product.brand && {
+      brand: { '@type': 'Brand', name: product.brand },
+    }),
+    ...(product.price != null && {
+      offers: {
+        '@type': 'Offer',
+        url: productUrl,
+        priceCurrency: 'USD',
+        price: String(product.price),
+        availability: product.in_stock
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      },
+    }),
+  };
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: pageUrl('/') },
+      ...ancestors.map((category, index) => ({
+        '@type': 'ListItem',
+        position: index + 2,
+        name: category.name_en,
+        item: pageUrl(`/category/${category.slug}`),
+      })),
+      {
+        '@type': 'ListItem',
+        position: ancestors.length + 2,
+        name: product.name,
+        item: productUrl,
+      },
+    ],
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <>
+      <Seo
+        title={product.name}
+        description={productDescription}
+        path={productPath}
+        image={imageUrls[0]}
+        type="product"
+        jsonLd={[productSchema, breadcrumbSchema]}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center flex-wrap gap-1 text-xs text-ink-muted mb-6">
         <Link to="/" className="hover:text-ink">
@@ -144,6 +223,7 @@ export default function ProductDetailPage() {
           <InquiryForm product={product} />
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

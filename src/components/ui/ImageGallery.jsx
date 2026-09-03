@@ -44,7 +44,7 @@ export default function ImageGallery({ product, views: viewsProp, images }) {
         <img
           key={active.url}
           src={active.url}
-          alt={viewLabelText(active.label, lang, d)}
+          alt={`${product?.name || 'Product'} — ${viewLabelText(active.label, lang, d)}`}
           className="w-full h-full object-cover"
         />
 
