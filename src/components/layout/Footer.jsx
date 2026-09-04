@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCategories } from '../../hooks/useCategories';
 import { catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import BrandLogo from '../ui/BrandLogo';
 
 export default function Footer() {
   const { tree } = useCategories();
@@ -15,18 +16,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-xl font-extrabold tracking-tight">
-                ABRON
-              </span>
-              <span
-                className={`text-lg font-bold text-eth-yellow ${
-                  amharic ? 'font-amharic' : ''
-                }`}
-              >
-                {d.brand}
-              </span>
-            </div>
+            <Link
+              to="/"
+              aria-label="Abron Shop home"
+              className="inline-flex bg-white rounded-md px-2 py-1 mb-3 no-underline"
+            >
+              <BrandLogo className="h-14 w-auto" />
+            </Link>
             <p
               className={`text-xs text-gray-300 leading-relaxed ${
                 amharic ? 'font-amharic' : ''

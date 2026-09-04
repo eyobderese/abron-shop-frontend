@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect } from 'react';
+import BrandLogo from '../../components/ui/BrandLogo';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary">AbronShop</h1>
+          <BrandLogo className="h-auto w-56 max-w-full mx-auto" loading="eager" priority />
           <p className="text-gray-500 text-sm mt-1">Admin Login</p>
         </div>
 

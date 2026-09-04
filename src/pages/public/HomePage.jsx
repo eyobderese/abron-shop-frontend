@@ -7,6 +7,7 @@ import AdSlot from '../../components/ui/AdSlot';
 import { dict, catLocal } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import Seo, { SITE_URL } from '../../components/seo/Seo';
+import BrandLogo from '../../components/ui/BrandLogo';
 
 function DealStrip({ lang }) {
   const d = dict(lang);
@@ -53,7 +54,7 @@ export default function HomePage() {
       '@type': 'Organization',
       name: 'Abron Shop',
       url: SITE_URL,
-      logo: `${SITE_URL}/favicon.svg`,
+      logo: `${SITE_URL}/brand-icon-512.png`,
     },
     {
       '@context': 'https://schema.org',
@@ -141,8 +142,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="relative aspect-[4/3] md:aspect-square bg-gradient-to-br from-eth-green/10 via-eth-yellow/10 to-eth-red/10 overflow-hidden flex items-center justify-center">
-            <div className="text-center p-6">
-              <div className="text-7xl md:text-8xl mb-4">🛍️</div>
+            <div className="text-center p-6 w-full">
+              <div className="bg-white/90 rounded-xl shadow-sm px-5 py-6 mb-4 mx-auto max-w-lg">
+                <BrandLogo className="w-full h-auto" loading="eager" />
+              </div>
               <p
                 className={`text-2xl font-bold text-ink ${
                   amharic ? 'font-amharic' : ''

@@ -4,6 +4,7 @@ import { Menu, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
 import { LOCALES, catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import BrandLogo from '../ui/BrandLogo';
 
 function LangSwitcher({ className = '' }) {
   const { lang, setLang } = useLang();
@@ -185,18 +186,10 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 gap-4">
             <Link
               to="/"
-              className="flex items-baseline gap-2 no-underline shrink-0"
+              aria-label="Abron Shop home"
+              className="flex items-center no-underline shrink-0"
             >
-              <span className="text-xl md:text-2xl font-extrabold tracking-tight text-ink">
-                ABRON
-              </span>
-              <span
-                className={`text-lg md:text-xl font-bold text-sale ${
-                  lang === 'or' ? '' : 'font-amharic'
-                }`}
-              >
-                {d.brand}
-              </span>
+              <BrandLogo className="h-10 md:h-11 w-auto" loading="eager" priority />
             </Link>
 
             {/* Search */}

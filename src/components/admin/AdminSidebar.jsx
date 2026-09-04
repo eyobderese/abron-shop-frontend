@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import BrandLogo from '../ui/BrandLogo';
 
 const links = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -39,10 +40,18 @@ export default function AdminSidebar({ open, onClose }) {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-bold text-primary">Admin Panel</h2>
+        <div>
+          <Link to="/" aria-label="Abron Shop home" className="block no-underline">
+            <BrandLogo className="h-9 w-auto" />
+          </Link>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Admin Panel
+          </p>
+        </div>
         <button
           className="lg:hidden p-1 rounded hover:bg-gray-100"
           onClick={onClose}
+          aria-label="Close admin navigation"
         >
           <X size={20} />
         </button>
