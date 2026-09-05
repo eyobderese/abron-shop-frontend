@@ -7,6 +7,7 @@ import ProductFormModal from '../../components/admin/ProductFormModal';
 import CategoryBadge from '../../components/ui/CategoryBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { formatMoney, productCurrency } from '../../lib/currency';
 
 export default function AdminProductsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -172,14 +173,14 @@ export default function AdminProductsPage() {
                         <td className="py-3 px-4 text-sm">
                           {product.price != null ? (
                             <span className="font-semibold">
-                              ${Number(product.price).toFixed(2)}
+                              {formatMoney(product.price, productCurrency(product))}
                             </span>
                           ) : (
                             '—'
                           )}
                           {product.was_price != null && (
                             <span className="text-xs text-ink-muted line-through ml-1">
-                              ${Number(product.was_price).toFixed(2)}
+                              {formatMoney(product.was_price, productCurrency(product))}
                             </span>
                           )}
                         </td>

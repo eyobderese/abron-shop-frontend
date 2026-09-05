@@ -14,6 +14,7 @@ import {
 import { useLang } from '../../context/LanguageContext';
 import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
 import { getProductViews } from '../../lib/productViews';
+import { formatMoney, productCurrency } from '../../lib/currency';
 
 function pct(was, now) {
   const w = Number(was);
@@ -78,6 +79,7 @@ export default function ProductDetailPage() {
     ? getAncestors(categories, product.category_id)
     : [];
   const off = pct(product.was_price, product.price);
+  const currency = productCurrency(product);
   const productPath = `/products/${product.slug}`;
   const productUrl = pageUrl(productPath);
   const imageUrls = getProductViews(product)
@@ -99,7 +101,7 @@ export default function ProductDetailPage() {
       offers: {
         '@type': 'Offer',
         url: productUrl,
-        priceCurrency: 'USD',
+        priceCurrency: currency,
         price: String(product.price),
         availability: product.in_stock
           ? 'https://schema.org/InStock'
@@ -180,13 +182,13 @@ export default function ProductDetailPage() {
               <span
                 className={`text-2xl font-bold ${off != null ? 'text-sale' : 'text-ink'}`}
               >
-                ${Number(product.price).toFixed(2)}
+                {formatMoney(product.price, currency)}
               </span>
             )}
             {product.was_price != null && off != null && (
               <>
                 <span className="text-base text-ink-muted line-through">
-                  ${Number(product.was_price).toFixed(2)}
+                  {formatMoney(product.was_price, currency)}
                 </span>
                 <span className="bg-sale text-white text-xs font-bold px-2 py-0.5 uppercase">
                   {off}% off

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../../context/LanguageContext';
 import { productLocalName, catLocal } from '../../lib/i18n';
 import { getProductViews } from '../../lib/productViews';
+import { formatMoney, productCurrency } from '../../lib/currency';
 
 function pct(was, now) {
   const w = Number(was);
@@ -16,6 +17,7 @@ export default function ProductCard({ product }) {
   const thumbnail = views[0]?.url;
   const hover = views[1]?.url || thumbnail;
   const off = pct(product.was_price, product.price);
+  const currency = productCurrency(product);
   const cat = product.categories; // joined row (may be undefined)
   const localName = productLocalName(product, lang);
   const localCat = catLocal(cat, lang);
@@ -84,12 +86,12 @@ export default function ProductCard({ product }) {
             <span
               className={`text-sm font-bold ${off != null ? 'text-sale' : 'text-ink'}`}
             >
-              ${Number(product.price).toFixed(2)}
+              {formatMoney(product.price, currency)}
             </span>
           )}
           {product.was_price != null && off != null && (
             <span className="text-xs text-ink-muted line-through">
-              ${Number(product.was_price).toFixed(2)}
+              {formatMoney(product.was_price, currency)}
             </span>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   getProductViews,
   viewsToPayload,
 } from '../../lib/productViews';
+import { DEFAULT_CURRENCY, PRODUCT_CURRENCIES } from '../../lib/currency';
 
 function treeOptions(tree, depth = 0, out = []) {
   for (const node of tree) {
@@ -67,6 +68,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           brand: product.brand || '',
           price: product.price ?? '',
           was_price: product.was_price ?? '',
+          currency: product.currency || DEFAULT_CURRENCY,
           in_stock: product.in_stock,
         }
       : {
@@ -78,6 +80,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           description_or: '',
           category_id: '',
           brand: '',
+          price: '',
+          was_price: '',
+          currency: DEFAULT_CURRENCY,
           in_stock: true,
         },
   });
@@ -157,6 +162,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         brand: data.brand?.trim() || null,
         price: data.price === '' ? null : Number(data.price),
         was_price: data.was_price === '' ? null : Number(data.was_price),
+        currency: data.currency || DEFAULT_CURRENCY,
         in_stock: !!data.in_stock,
         image_views,
         images,
@@ -318,10 +324,22 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-                Price ($)
+                Currency
+              </label>
+              <select className={inputClass} {...register('currency')}>
+                {PRODUCT_CURRENCIES.map(({ code, label }) => (
+                  <option key={code} value={code}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+                Price
               </label>
               <input
                 type="number"
@@ -333,7 +351,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-                Was price ($)
+                Was price
               </label>
               <input
                 type="number"
