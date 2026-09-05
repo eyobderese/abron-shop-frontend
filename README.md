@@ -57,7 +57,7 @@ The API must allow the deployed frontend origin through its `FRONTEND_ORIGIN` se
 ## SEO foundation
 
 - Public home, category, and product routes publish unique titles, descriptions, canonical URLs, social metadata, and JSON-LD.
-- Product JSON-LD reflects the visible USD price and stock status.
+- Product JSON-LD reflects the product's selected ETB or USD currency, visible price, and stock status.
 - Product pages use permanent readable URLs such as `/products/nike-air-max-270`; legacy UUID URLs are permanently redirected.
 - Search, administration, and not-found views are marked `noindex`.
 - `robots.txt` references `https://abronshop.online/sitemap.xml`.
