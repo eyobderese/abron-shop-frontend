@@ -395,7 +395,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                       <img
                         src={view.url}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </div>
 

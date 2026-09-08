@@ -28,20 +28,20 @@ export default function ProductCard({ product }) {
       to={product.slug ? `/products/${product.slug}` : `/product/${product.id}`}
       className="group block no-underline"
     >
-      <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+      <div className="relative aspect-[3/4] bg-white overflow-hidden">
         {thumbnail ? (
           <>
             <img
               src={thumbnail}
               alt={product.name}
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 group-hover:opacity-0"
             />
             <img
               src={hover}
               alt=""
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             />
           </>
         ) : (

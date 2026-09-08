@@ -40,12 +40,12 @@ export default function ImageGallery({ product, views: viewsProp, images }) {
 
   return (
     <div>
-      <div className="relative aspect-square bg-gray-100 overflow-hidden mb-3">
+      <div className="relative aspect-square bg-white overflow-hidden mb-3">
         <img
           key={active.url}
           src={active.url}
           alt={`${product?.name || 'Product'} — ${viewLabelText(active.label, lang, d)}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
 
         {count > 1 && (
@@ -97,11 +97,11 @@ export default function ImageGallery({ product, views: viewsProp, images }) {
                     selected ? 'border-ink' : 'border-transparent hover:border-gray-300'
                   }`}
                 >
-                  <div className="aspect-square overflow-hidden bg-gray-100">
+                  <div className="aspect-square overflow-hidden bg-white">
                     <img
                       src={view.url}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   <span
