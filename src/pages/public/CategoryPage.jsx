@@ -51,13 +51,13 @@ function FilterPanel({
           {d.priceRange}
         </h3>
         <label className="block text-xs text-ink-muted mb-1">
-          Max price ($)
+          Maximum price
         </label>
         <input
           type="number"
           value={priceMax}
           onChange={(e) => setPriceMax(e.target.value)}
-          placeholder="e.g. 100"
+          placeholder="e.g. 5000"
           className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-ink"
         />
       </div>

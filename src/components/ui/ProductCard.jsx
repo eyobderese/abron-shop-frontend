@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../../context/LanguageContext';
 import { productLocalName, catLocal } from '../../lib/i18n';
 import { getProductViews } from '../../lib/productViews';
+import { formatMoney, productCurrency } from '../../lib/currency';
 
 function pct(was, now) {
   const w = Number(was);
@@ -16,6 +17,7 @@ export default function ProductCard({ product }) {
   const thumbnail = views[0]?.url;
   const hover = views[1]?.url || thumbnail;
   const off = pct(product.was_price, product.price);
+  const currency = productCurrency(product);
   const cat = product.categories; // joined row (may be undefined)
   const localName = productLocalName(product, lang);
   const localCat = catLocal(cat, lang);
@@ -26,20 +28,20 @@ export default function ProductCard({ product }) {
       to={product.slug ? `/products/${product.slug}` : `/product/${product.id}`}
       className="group block no-underline"
     >
-      <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+      <div className="relative aspect-[3/4] bg-white overflow-hidden">
         {thumbnail ? (
           <>
             <img
               src={thumbnail}
               alt={product.name}
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 group-hover:opacity-0"
             />
             <img
               src={hover}
               alt=""
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             />
           </>
         ) : (
@@ -84,12 +86,12 @@ export default function ProductCard({ product }) {
             <span
               className={`text-sm font-bold ${off != null ? 'text-sale' : 'text-ink'}`}
             >
-              ${Number(product.price).toFixed(2)}
+              {formatMoney(product.price, currency)}
             </span>
           )}
           {product.was_price != null && off != null && (
             <span className="text-xs text-ink-muted line-through">
-              ${Number(product.was_price).toFixed(2)}
+              {formatMoney(product.was_price, currency)}
             </span>
           )}
         </div>

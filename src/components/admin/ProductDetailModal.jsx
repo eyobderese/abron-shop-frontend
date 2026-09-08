@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import CategoryBadge from '../ui/CategoryBadge';
 import ImageGallery from '../ui/ImageGallery';
+import { formatMoney, productCurrency } from '../../lib/currency';
 
 export default function ProductDetailModal({ productId, onClose }) {
   const [product, setProduct] = useState(null);
@@ -66,7 +67,7 @@ export default function ProductDetailModal({ productId, onClose }) {
 
               {product.price != null && (
                 <p className="text-xl font-bold text-primary">
-                  ${Number(product.price).toFixed(2)}
+                  {formatMoney(product.price, productCurrency(product))}
                 </p>
               )}
 
