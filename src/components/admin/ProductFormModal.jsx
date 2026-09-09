@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { X, Upload, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Upload, ChevronUp, ChevronDown, Languages } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/apiClient';
 import { useAdminCategories } from '../../hooks/useCategories';
@@ -48,12 +48,15 @@ async function uploadImageFile(file) {
 export default function ProductFormModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
   const [submitting, setSubmitting] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [views, setViews] = useState(() => initViews(product));
   const { tree, loading: catsLoading } = useAdminCategories();
 
   const {
     register,
     handleSubmit,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: product
@@ -125,6 +128,59 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         file,
       })),
     ]);
+  }
+
+  async function generateTranslationDrafts() {
+    const name = getValues('name')?.trim();
+    const description = getValues('description')?.trim();
+    if (!name || !description) {
+      toast.error('Enter the English name and description first.');
+      return;
+    }
+
+    const translatedFields = [
+      'name_am',
+      'description_am',
+      'name_or',
+      'description_or',
+    ];
+    const hasExistingTranslation = translatedFields.some((field) =>
+      getValues(field)?.trim(),
+    );
+    if (
+      hasExistingTranslation &&
+      !window.confirm(
+        'Replace the existing Amharic and Afaan Oromo text with new drafts?',
+      )
+    ) {
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const draft = await api.post('/admin/translations/product-draft', {
+        name,
+        description,
+      });
+      let populated = 0;
+      for (const field of translatedFields) {
+        if (typeof draft[field] === 'string' && draft[field].trim()) {
+          setValue(field, draft[field], { shouldDirty: true, shouldValidate: true });
+          populated += 1;
+        }
+      }
+      if (!populated) throw new Error('No translation drafts were returned');
+
+      if (draft.warnings?.length) {
+        toast.error(draft.warnings.join('. '));
+      } else {
+        toast.success('Translation drafts generated. Please review them.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to generate translation drafts');
+    } finally {
+      setTranslating(false);
+    }
   }
 
   async function onSubmit(data) {
@@ -215,30 +271,6 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-              Name (Amharic) · ስም
-            </label>
-            <input
-              type="text"
-              className={`${inputClass} font-amharic`}
-              placeholder="በአማርኛ የምርት ስም"
-              {...register('name_am')}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-              Name (Afaan Oromo) · Maqaa
-            </label>
-            <input
-              type="text"
-              className={inputClass}
-              placeholder="Maqaa oomishaa Afaan Oromoo"
-              {...register('name_or')}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
               Brand
             </label>
             <input
@@ -267,6 +299,41 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             )}
           </div>
 
+          <div className="border border-blue-200 bg-blue-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-ink">
+                  Translation drafts
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  Generate Amharic and Afaan Oromo drafts from the English text.
+                  Review and edit them before saving the product.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={generateTranslationDrafts}
+                disabled={translating || submitting}
+                className="inline-flex shrink-0 items-center justify-center gap-2 bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Languages size={16} />
+                {translating ? 'Translating…' : 'Generate drafts'}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+              Name (Amharic) · ስም
+            </label>
+            <input
+              type="text"
+              className={`${inputClass} font-amharic`}
+              placeholder="በአማርኛ የምርት ስም"
+              {...register('name_am')}
+            />
+          </div>
+
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
               Description (Amharic) · መግለጫ
@@ -276,6 +343,18 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               rows={3}
               placeholder="በአማርኛ መግለጫ"
               {...register('description_am')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+              Name (Afaan Oromo) · Maqaa
+            </label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Maqaa oomishaa Afaan Oromoo"
+              {...register('name_or')}
             />
           </div>
 
