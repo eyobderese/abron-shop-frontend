@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Menu } from 'lucide-react';
+import { Plus, Pencil, Trash2, Menu, Copy } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { useAdminCategories, collectDescendantIds } from '../../hooks/useCategories';
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -166,6 +166,13 @@ export default function AdminProductsPage() {
                           <p className="text-sm text-ink-soft">
                             {product.name}
                           </p>
+                          {(product.model_code || product.color_name) && (
+                            <p className="mt-0.5 text-[11px] text-ink-muted">
+                              {[product.model_code, product.color_name]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </p>
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <CategoryBadge category={product.categories} />
@@ -197,9 +204,22 @@ export default function AdminProductsPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {product.model_code && (
+                              <button
+                                onClick={() =>
+                                  setModalProduct({ ...product, _duplicate: true })
+                                }
+                                className="p-1.5 text-ink-muted hover:bg-gray-100 hover:text-ink"
+                                title="Duplicate as another color"
+                                aria-label={`Duplicate ${product.name} as another color`}
+                              >
+                                <Copy size={14} />
+                              </button>
+                            )}
                             <button
                               onClick={() => setModalProduct(product)}
                               className="p-1.5 text-ink-muted hover:bg-gray-100 hover:text-ink"
+                              title="Edit product"
                             >
                               <Pencil size={14} />
                             </button>

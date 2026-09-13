@@ -32,6 +32,8 @@ export default function InquiryTable({ inquiries, onStatusChange }) {
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Product</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Size</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Color</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Customer</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Telegram</th>
@@ -55,6 +57,12 @@ export default function InquiryTable({ inquiries, onStatusChange }) {
                   ) : (
                     <span className="text-gray-500">{inq.product_name}</span>
                   )}
+                </td>
+                <td className="py-3 px-4 whitespace-nowrap">
+                  {inq.selected_size || <span className="text-gray-300">&mdash;</span>}
+                </td>
+                <td className="py-3 px-4 whitespace-nowrap">
+                  {inq.selected_color || <span className="text-gray-300">&mdash;</span>}
                 </td>
                 <td className="py-3 px-4">{inq.full_name}</td>
                 <td className="py-3 px-4 whitespace-nowrap">{inq.phone}</td>

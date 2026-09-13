@@ -80,6 +80,11 @@ export default function ProductCard({ product }) {
             {localName}
           </p>
         )}
+        {product.color_name && (
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink-muted">
+            {product.color_name}
+          </p>
+        )}
 
         <div className="flex items-baseline gap-2 mt-1.5">
           {product.price != null && (

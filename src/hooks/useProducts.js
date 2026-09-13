@@ -45,19 +45,90 @@ export function useProducts(opts = {}) {
 }
 
 export function useProduct(identifier) {
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [result, setResult] = useState({
+    identifier: null,
+    product: null,
+    error: null,
+  });
 
   useEffect(() => {
     if (!identifier) return;
     let cancelled = false;
     api.get(`/products/${encodeURIComponent(identifier)}`)
-      .then((data) => { if (!cancelled) setProduct(data); })
-      .catch((err) => { if (!cancelled) setError(err.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .then((data) => {
+        if (!cancelled) setResult({ identifier, product: data, error: null });
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setResult({ identifier, product: null, error: err.message });
+        }
+      });
     return () => { cancelled = true; };
   }, [identifier]);
 
-  return { product, loading, error };
+  if (result.identifier !== identifier) {
+    return { product: null, loading: true, error: null };
+  }
+  return { product: result.product, loading: false, error: result.error };
+}
+
+export function useRelatedProducts(identifier, limit = 8) {
+  const [result, setResult] = useState({
+    identifier: null,
+    products: [],
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!identifier) return;
+    let cancelled = false;
+    const params = new URLSearchParams({ limit: String(limit) });
+    api.get(`/products/${encodeURIComponent(identifier)}/related?${params}`)
+      .then((data) => {
+        if (!cancelled) {
+          setResult({ identifier, products: data || [], error: null });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setResult({ identifier, products: [], error: err.message });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [identifier, limit]);
+
+  if (result.identifier !== identifier) {
+    return { products: [], loading: true, error: null };
+  }
+  return { products: result.products, loading: false, error: result.error };
+}
+
+export function useProductVariants(identifier) {
+  const [result, setResult] = useState({
+    identifier: null,
+    products: [],
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!identifier) return;
+    let cancelled = false;
+    api.get(`/products/${encodeURIComponent(identifier)}/variants`)
+      .then((data) => {
+        if (!cancelled) {
+          setResult({ identifier, products: data || [], error: null });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setResult({ identifier, products: [], error: err.message });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [identifier]);
+
+  if (result.identifier !== identifier) {
+    return { products: [], loading: true, error: null };
+  }
+  return { products: result.products, loading: false, error: result.error };
 }
