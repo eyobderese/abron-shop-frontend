@@ -15,8 +15,11 @@ export default function InquiryForm({ product }) {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm();
+  const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+  const selectedSize = watch('selected_size');
 
   const base =
     'w-full border rounded-none px-3 py-2 text-sm focus:outline-none focus:ring-1';
@@ -31,6 +34,7 @@ export default function InquiryForm({ product }) {
         full_name: data.full_name,
         phone: data.phone,
         telegram: data.telegram,
+        selected_size: data.selected_size || null,
         message: data.message || null,
       });
       toast.success(
@@ -39,8 +43,8 @@ export default function InquiryForm({ product }) {
           : `Thank you! We'll contact you soon. · Galatoomaa!`
       );
       reset();
-    } catch {
-      toast.error('Failed to submit inquiry. Please try again.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit inquiry. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -62,6 +66,68 @@ export default function InquiryForm({ product }) {
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {product.color_name && (
+          <div className="border border-gray-200 bg-white px-3 py-2 text-sm text-ink">
+            <span className="font-semibold">Selected color:</span>{' '}
+            {product.color_name}
+          </div>
+        )}
+
+        {sizes.length > 0 && (
+          <fieldset>
+            <legend className="block text-xs font-semibold uppercase tracking-wider text-ink mb-2">
+              Size · {amharic ? 'መጠን' : 'Safara'} *
+            </legend>
+            {sizes.length <= 12 ? (
+              <div className="flex flex-wrap gap-2">
+                {sizes.map((size) => (
+                  <label key={size} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      value={size}
+                      className="peer sr-only"
+                      {...register('selected_size', {
+                        required: 'Please select a size',
+                      })}
+                    />
+                    <span
+                      className={`inline-flex min-w-12 items-center justify-center border px-3 py-2 text-sm font-semibold transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink ${
+                        selectedSize === size
+                          ? 'border-ink bg-ink text-white'
+                          : 'border-gray-300 bg-white text-ink hover:border-ink'
+                      }`}
+                    >
+                      {size}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <select
+                className={errors.selected_size ? errorInputClass : inputClass}
+                defaultValue=""
+                {...register('selected_size', {
+                  required: 'Please select a size',
+                })}
+              >
+                <option value="" disabled>
+                  Select an available size
+                </option>
+                {sizes.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors.selected_size && (
+              <p className="text-sale text-xs mt-1">
+                {errors.selected_size.message}
+              </p>
+            )}
+          </fieldset>
+        )}
+
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1">
             Full Name · {d.fullName} *
@@ -116,7 +182,7 @@ export default function InquiryForm({ product }) {
           <textarea
             className={inputClass}
             rows={3}
-            placeholder="Size, color, quantity, or any question…"
+            placeholder="Color, quantity, or any question…"
             {...register('message')}
           />
         </div>
