@@ -15,6 +15,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import Seo, { pageUrl } from '../../components/seo/Seo';
+import LoadError from '../../components/ui/LoadError';
 
 function FilterPanel({
   sidebarRoots,
@@ -125,7 +126,13 @@ function SubtreeNav({ node, currentSlug, onPick, lang }) {
 
 export default function CategoryPage() {
   const { slug } = useParams();
-  const { categories, tree, loading: catsLoading } = useCategories();
+  const {
+    categories,
+    tree,
+    loading: catsLoading,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories();
   const { lang } = useLang();
   const d = dict(lang);
   const amharic = lang !== 'or';
@@ -140,7 +147,12 @@ export default function CategoryPage() {
     [categories, currentCat]
   );
 
-  const { products, loading } = useProducts({
+  const {
+    products,
+    loading,
+    error: productsError,
+    refetch: refetchProducts,
+  } = useProducts({
     categoryIds: ids.length ? ids : undefined,
   });
 
@@ -197,6 +209,24 @@ export default function CategoryPage() {
   }, [currentCat, categories, tree]);
 
   if (catsLoading) return <LoadingSpinner />;
+
+  if (categoriesError) {
+    return (
+      <>
+        <Seo
+          title="Unable to Load Category"
+          description="The category could not be loaded because of a connection problem."
+          canonical={false}
+          noindex
+        />
+        <LoadError
+          title="Could not load the category"
+          message={categoriesError.message}
+          onRetry={refetchCategories}
+        />
+      </>
+    );
+  }
 
   if (!currentCat) {
     return (
@@ -325,7 +355,13 @@ export default function CategoryPage() {
             <SlidersHorizontal size={14} /> {d.filter}
           </button>
 
-          {loading ? (
+          {productsError ? (
+            <LoadError
+              title="Could not load products"
+              message={productsError.message}
+              onRetry={refetchProducts}
+            />
+          ) : loading ? (
             <LoadingSpinner />
           ) : visibleProducts.length === 0 ? (
             <EmptyState message={`${d.noProducts} · No products yet.`} />

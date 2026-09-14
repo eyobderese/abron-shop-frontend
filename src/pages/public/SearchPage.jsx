@@ -6,6 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import Seo from '../../components/seo/Seo';
+import LoadError from '../../components/ui/LoadError';
 
 export default function SearchPage() {
   const [params] = useSearchParams();
@@ -14,7 +15,7 @@ export default function SearchPage() {
   const d = dict(lang);
   const amharic = lang !== 'or';
 
-  const { products, loading } = useProducts({ search: q });
+  const { products, loading, error, refetch } = useProducts({ search: q });
 
   return (
     <>
@@ -43,12 +44,18 @@ export default function SearchPage() {
           </p>
         ) : (
           <p className="text-sm text-ink-muted mt-2">
-            Type a keyword in the search bar to find products.
+            Search by product name, brand, or model.
           </p>
         )}
       </header>
 
-      {!q ? null : loading ? (
+      {!q ? null : error ? (
+        <LoadError
+          title="Could not load search results"
+          message={error.message}
+          onRetry={refetch}
+        />
+      ) : loading ? (
         <LoadingSpinner />
       ) : products.length === 0 ? (
         <div>

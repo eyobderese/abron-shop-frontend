@@ -78,7 +78,7 @@ export function useCategories() {
       setCategories((await api.get('/categories')) || []);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ export function useAdminCategories() {
       setCategories((await api.get('/admin/categories')) || []);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }

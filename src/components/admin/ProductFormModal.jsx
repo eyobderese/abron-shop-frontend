@@ -346,7 +346,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
       const { image_views, images } = viewsToPayload(resolved);
 
       const payload = {
-        name: data.name,
+        name: data.name.trim(),
         name_am: data.name_am?.trim() || null,
         name_or: data.name_or?.trim() || null,
         description: data.description,
@@ -407,8 +407,11 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </label>
             <input
               type="text"
-              className={inputClass}
-              {...register('name', { required: 'Name is required' })}
+              className={errors.name ? `${inputClass} border-sale` : inputClass}
+              {...register('name', {
+                required: 'Name is required',
+                validate: (value) => value.trim() !== '' || 'Name is required',
+              })}
             />
             {errors.name && (
               <p className="text-sale text-xs mt-1">{errors.name.message}</p>
@@ -417,14 +420,20 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-              Brand
+              Brand *
             </label>
             <input
               type="text"
-              className={inputClass}
+              className={errors.brand ? `${inputClass} border-sale` : inputClass}
               placeholder="Nike, Zara, Nordstrom…"
-              {...register('brand')}
+              {...register('brand', {
+                required: 'Brand is required',
+                validate: (value) => value.trim() !== '' || 'Brand is required',
+              })}
             />
+            {errors.brand && (
+              <p className="text-sale text-xs mt-1">{errors.brand.message}</p>
+            )}
           </div>
 
           <div className="border border-gray-200 p-4 space-y-4">

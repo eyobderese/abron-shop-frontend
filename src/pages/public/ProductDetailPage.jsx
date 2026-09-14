@@ -20,6 +20,7 @@ import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
 import { getProductViews } from '../../lib/productViews';
 import { formatMoney, productCurrency } from '../../lib/currency';
 import ProductCard from '../../components/ui/ProductCard';
+import LoadError from '../../components/ui/LoadError';
 
 function pct(was, now) {
   const w = Number(was);
@@ -31,7 +32,7 @@ function pct(was, now) {
 export default function ProductDetailPage() {
   const { slug, id } = useParams();
   const identifier = slug || id;
-  const { product, loading, error } = useProduct(identifier);
+  const { product, loading, error, refetch } = useProduct(identifier);
   const { products: colorVariants } = useProductVariants(identifier);
   const { products: relatedProducts, loading: relatedLoading } =
     useRelatedProducts(identifier, 8);
@@ -54,7 +55,25 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (error || !product) {
+  if (error && error.status !== 404) {
+    return (
+      <>
+        <Seo
+          title="Unable to Load Product"
+          description="The product could not be loaded because of a connection problem."
+          canonical={false}
+          noindex
+        />
+        <LoadError
+          title="Could not load the product"
+          message={error.message}
+          onRetry={refetch}
+        />
+      </>
+    );
+  }
+
+  if (error?.status === 404 || !product) {
     return (
       <>
         <Seo

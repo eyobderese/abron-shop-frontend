@@ -47,7 +47,9 @@ function SearchForm({ initial = '', onSubmitted, mobile = false }) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={
-          mobile ? `Search · ${d.search}…` : `Search products · ${d.search}…`
+          mobile
+            ? `Search name or brand · ${d.search}…`
+            : `Search products or brands · ${d.search}…`
         }
         className="w-full border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-ink"
       />
