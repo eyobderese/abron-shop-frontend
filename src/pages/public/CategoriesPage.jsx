@@ -4,9 +4,10 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useCategories } from '../../hooks/useCategories';
 import { catLabel } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import LoadError from '../../components/ui/LoadError';
 
 export default function CategoriesPage() {
-  const { categories, loading } = useCategories();
+  const { categories, loading, error, refetch } = useCategories();
   const { lang } = useLang();
 
   return (
@@ -26,7 +27,13 @@ export default function CategoriesPage() {
           </p>
         </header>
 
-        {loading ? (
+        {error ? (
+          <LoadError
+            title="Could not load categories"
+            message={error.message}
+            onRetry={refetch}
+          />
+        ) : loading ? (
           <LoadingSpinner />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

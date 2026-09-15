@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import {
@@ -20,6 +21,7 @@ import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
 import { getProductViews } from '../../lib/productViews';
 import { formatMoney, productCurrency } from '../../lib/currency';
 import ProductCard from '../../components/ui/ProductCard';
+import LoadError from '../../components/ui/LoadError';
 
 function pct(was, now) {
   const w = Number(was);
@@ -28,10 +30,74 @@ function pct(was, now) {
   return Math.round(((w - n) / w) * 100);
 }
 
+function SizeSelector({ sizes, selectedSize, onSelect, lang }) {
+  if (!sizes.length) return null;
+  const translatedSize = lang === 'or' ? 'Safara' : 'መጠን';
+
+  return (
+    <div>
+      <p id="product-size-label" className="mb-3 text-sm font-semibold text-ink">
+        Size · {translatedSize}: *
+      </p>
+      {sizes.length <= 12 ? (
+        <div
+          role="group"
+          aria-labelledby="product-size-label"
+          className="flex flex-wrap gap-2"
+        >
+          {sizes.map((size) => {
+            const selected = selectedSize === size;
+            return (
+              <button
+                key={size}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onSelect(size)}
+                className={`inline-flex min-w-12 items-center justify-center border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                  selected
+                    ? 'border-ink bg-ink text-white'
+                    : 'border-gray-300 bg-white text-ink hover:border-ink'
+                }`}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <select
+          value={selectedSize}
+          onChange={(event) => onSelect(event.target.value)}
+          aria-labelledby="product-size-label"
+          className="w-full border border-gray-300 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink sm:max-w-xs"
+        >
+          <option value="" disabled>
+            Select an available size
+          </option>
+          {sizes.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+      )}
+      {!selectedSize && (
+        <p className="mt-2 text-xs text-ink-muted">
+          Select a size before sending your inquiry.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function ProductDetailPage() {
+  const [sizeSelection, setSizeSelection] = useState({
+    productId: null,
+    size: '',
+  });
   const { slug, id } = useParams();
   const identifier = slug || id;
-  const { product, loading, error } = useProduct(identifier);
+  const { product, loading, error, refetch } = useProduct(identifier);
   const { products: colorVariants } = useProductVariants(identifier);
   const { products: relatedProducts, loading: relatedLoading } =
     useRelatedProducts(identifier, 8);
@@ -39,6 +105,9 @@ export default function ProductDetailPage() {
   const { lang } = useLang();
   const d = dict(lang);
   const amharic = lang !== 'or';
+  const sizes = Array.isArray(product?.sizes) ? product.sizes : [];
+  const selectedSize =
+    sizeSelection.productId === product?.id ? sizeSelection.size : '';
 
   if (loading) {
     return (
@@ -54,7 +123,25 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (error || !product) {
+  if (error && error.status !== 404) {
+    return (
+      <>
+        <Seo
+          title="Unable to Load Product"
+          description="The product could not be loaded because of a connection problem."
+          canonical={false}
+          noindex
+        />
+        <LoadError
+          title="Could not load the product"
+          message={error.message}
+          onRetry={refetch}
+        />
+      </>
+    );
+  }
+
+  if (error?.status === 404 || !product) {
     return (
       <>
         <Seo
@@ -187,50 +274,65 @@ export default function ProductDetailPage() {
             </p>
           )}
 
-          {colorVariants.length > 1 && (
-            <div className="my-5 border-y border-gray-200 py-5">
-              <p className="mb-3 text-sm font-semibold text-ink">
-                Color · {d.color}:{' '}
-                <span className="font-normal">{product.color_name}</span>
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {colorVariants.map((variant) => {
-                  const thumbnail = getProductViews(variant)[0]?.url;
-                  const active = variant.id === product.id;
-                  return (
-                    <Link
-                      key={variant.id}
-                      to={`/products/${variant.slug}`}
-                      title={variant.color_name || variant.name}
-                      aria-label={`Select ${variant.color_name || variant.name}`}
-                      aria-current={active ? 'true' : undefined}
-                      className={`relative h-16 w-16 overflow-hidden border-2 bg-white p-0.5 transition-colors ${
-                        active
-                          ? 'border-ink'
-                          : 'border-gray-200 hover:border-ink-muted'
-                      } ${variant.in_stock ? '' : 'opacity-50'}`}
-                    >
-                      {thumbnail ? (
-                        <img
-                          src={thumbnail}
-                          alt=""
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <span
-                          className="block h-full w-full"
-                          style={{ backgroundColor: variant.color_hex || '#f3f4f6' }}
-                        />
-                      )}
-                      {active && (
-                        <span className="absolute inset-x-0 bottom-0 bg-ink py-0.5 text-center text-[9px] font-bold uppercase text-white">
-                          Selected
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
+          {(colorVariants.length > 1 || sizes.length > 0) && (
+            <div className="my-5 space-y-5 border-y border-gray-200 py-5">
+              {colorVariants.length > 1 && (
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-ink">
+                    Color · {d.color}:{' '}
+                    <span className="font-normal">{product.color_name}</span>
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {colorVariants.map((variant) => {
+                      const thumbnail = getProductViews(variant)[0]?.url;
+                      const active = variant.id === product.id;
+                      return (
+                        <Link
+                          key={variant.id}
+                          to={`/products/${variant.slug}`}
+                          title={variant.color_name || variant.name}
+                          aria-label={`Select ${variant.color_name || variant.name}`}
+                          aria-current={active ? 'true' : undefined}
+                          className={`relative h-16 w-16 overflow-hidden border-2 bg-white p-0.5 transition-colors ${
+                            active
+                              ? 'border-ink'
+                              : 'border-gray-200 hover:border-ink-muted'
+                          } ${variant.in_stock ? '' : 'opacity-50'}`}
+                        >
+                          {thumbnail ? (
+                            <img
+                              src={thumbnail}
+                              alt=""
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <span
+                              className="block h-full w-full"
+                              style={{
+                                backgroundColor: variant.color_hex || '#f3f4f6',
+                              }}
+                            />
+                          )}
+                          {active && (
+                            <span className="absolute inset-x-0 bottom-0 bg-ink py-0.5 text-center text-[9px] font-bold uppercase text-white">
+                              Selected
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <SizeSelector
+                sizes={sizes}
+                selectedSize={selectedSize}
+                onSelect={(size) =>
+                  setSizeSelection({ productId: product.id, size })
+                }
+                lang={lang}
+              />
             </div>
           )}
 
@@ -284,7 +386,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <InquiryForm product={product} />
+          <InquiryForm product={product} selectedSize={selectedSize} />
         </div>
       </div>
 

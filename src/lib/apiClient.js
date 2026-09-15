@@ -40,15 +40,29 @@ async function request(path, options = {}, retry = true) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-    body:
-      options.body && !(options.body instanceof FormData)
-        ? JSON.stringify(options.body)
-        : options.body,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+      body:
+        options.body && !(options.body instanceof FormData)
+          ? JSON.stringify(options.body)
+          : options.body,
+    });
+  } catch (cause) {
+    const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+    const error = new Error(
+      offline
+        ? 'You appear to be offline. Check your internet connection and try again.'
+        : 'Unable to connect to Abron Shop. Please try again.',
+      { cause },
+    );
+    error.status = 0;
+    error.isNetworkError = true;
+    throw error;
+  }
 
   if (response.status === 401 && retry && !path.startsWith('/auth/')) {
     try {
