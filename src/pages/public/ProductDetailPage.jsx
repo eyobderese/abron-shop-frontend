@@ -182,18 +182,28 @@ export default function ProductDetailPage() {
     .filter(Boolean);
   const productDescription = product.description ||
     `View ${product.name}, availability and delivery information from Abron Shop.`;
+  const productType = product.product_type || 'product';
+  const displayProductType = productType.toLocaleLowerCase();
+  const colorText = product.color_name ? ` in ${product.color_name}` : '';
+  const productSeoText = `Looking for ${product.brand ? `${product.brand} ` : ''}${displayProductType} in Ethiopia? ${product.name}${colorText} is available through Abron Shop. We bring authentic products from the USA to customers in Addis Ababa and across Ethiopia. Review the price, available sizes and colors, then send an inquiry.`;
+  const productSeoDescription = `${productSeoText} ${productDescription}`;
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
+    category: productType,
     description: productDescription,
     url: productUrl,
     ...(imageUrls.length > 0 && { image: imageUrls }),
     ...(product.brand && {
       brand: { '@type': 'Brand', name: product.brand },
     }),
+    ...(product.family_name && { model: product.family_name }),
+    ...(product.model_code && { mpn: product.model_code }),
     ...(product.color_name && { color: product.color_name }),
-    ...(product.color_code && { sku: product.color_code }),
+    ...((product.model_code || product.color_code) && {
+      sku: [product.model_code, product.color_code].filter(Boolean).join('-'),
+    }),
     ...(product.price != null && {
       offers: {
         '@type': 'Offer',
@@ -203,6 +213,10 @@ export default function ProductDetailPage() {
         availability: product.in_stock
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
+        seller: {
+          '@type': 'Organization',
+          name: 'Abron Shop',
+        },
       },
     }),
   };
@@ -229,8 +243,8 @@ export default function ProductDetailPage() {
   return (
     <>
       <Seo
-        title={product.name}
-        description={productDescription}
+        title={`${product.name} in Ethiopia`}
+        description={productSeoDescription}
         path={productPath}
         image={imageUrls[0]}
         type="product"
@@ -410,6 +424,13 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      <section className="mt-14 border-t border-gray-200 pt-8 text-sm leading-7 text-ink-soft">
+        <h2 className="mb-2 text-base font-semibold text-ink">
+          About this {displayProductType}
+        </h2>
+        <p>{productSeoText}</p>
+      </section>
       </div>
     </>
   );

@@ -47,7 +47,7 @@ export default function HomePage() {
   const womenCat = categories.find((c) => c.slug === 'women');
   const menCat = categories.find((c) => c.slug === 'men');
   const description =
-    'Shop authentic American brand shoes, clothing, beauty products and more, delivered from the USA to Ethiopia. Browse products and send an inquiry.';
+    'Shop authentic American shoes, clothing and cosmetics in Ethiopia. Browse trusted USA brands, compare prices, choose sizes and colors, and send an inquiry.';
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -88,7 +88,7 @@ export default function HomePage() {
   return (
     <>
       <Seo
-        title="Abron Shop · Authentic American Brands Delivered to Ethiopia"
+        title="Shoes, Clothing & Cosmetics in Ethiopia | Abron Shop"
         description={description}
         path="/"
         jsonLd={structuredData}
@@ -104,9 +104,9 @@ export default function HomePage() {
               🇺🇸 USA → 🇪🇹 Ethiopia · Direct
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink leading-[1.05]">
-              Original American Brands,
+              Shoes, Clothing & Cosmetics
               <br />
-              <span className="text-sale">Delivered to Ethiopia.</span>
+              <span className="text-sale">from the USA to Ethiopia.</span>
             </h1>
             {amharic ? (
               <p className="font-amharic text-xl md:text-2xl text-ink mt-4">

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Seo from '../../components/seo/Seo';
+import Seo, { pageUrl } from '../../components/seo/Seo';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useCategories } from '../../hooks/useCategories';
 import { catLabel } from '../../lib/i18n';
@@ -9,13 +9,28 @@ import LoadError from '../../components/ui/LoadError';
 export default function CategoriesPage() {
   const { categories, loading, error, refetch } = useCategories();
   const { lang } = useLang();
+  const categoryListSchema = categories.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Abron Shop product categories',
+        numberOfItems: categories.length,
+        itemListElement: categories.map((category, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: category.name_en,
+          url: pageUrl(`/category/${category.slug}`),
+        })),
+      }
+    : null;
 
   return (
     <>
       <Seo
-        title="Shop All Categories"
-        description="Browse all Abron Shop categories for authentic American brand products delivered to Ethiopia."
+        title="Shop Shoes, Clothing & Cosmetics in Ethiopia"
+        description="Browse authentic American shoes, clothing, cosmetics and other USA brand products available through Abron Shop in Ethiopia."
         path="/categories"
+        jsonLd={categoryListSchema}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="mb-8">
@@ -23,7 +38,8 @@ export default function CategoriesPage() {
             Shop All Categories
           </h1>
           <p className="text-sm text-ink-muted mt-2">
-            Browse the complete Abron Shop catalog by category.
+            Browse authentic American shoes, clothing, cosmetics and more by
+            category, with availability and prices for shoppers in Ethiopia.
           </p>
         </header>
 

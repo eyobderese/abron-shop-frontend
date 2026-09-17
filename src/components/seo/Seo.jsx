@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 const configuredSiteUrl = import.meta.env.VITE_SITE_URL || 'https://abronshop.online';
 
 export const SITE_URL = configuredSiteUrl.replace(/\/+$/, '');
@@ -35,6 +37,12 @@ export default function Seo({
   noindex = false,
   jsonLd = [],
 }) {
+  useEffect(() => {
+    document.querySelectorAll('[data-seo-fallback]').forEach((element) => {
+      element.remove();
+    });
+  }, []);
+
   const fullTitle = title.includes('Abron Shop') ? title : `${title} | Abron Shop`;
   const summary = cleanText(description, 160);
   const canonicalUrl = canonical === false ? null : absoluteUrl(canonical || path);

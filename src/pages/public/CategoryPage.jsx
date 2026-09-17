@@ -264,7 +264,9 @@ export default function CategoryPage() {
     lang,
   };
   const categoryPath = `/category/${currentCat.slug}`;
-  const categoryDescription = `Shop ${currentCat.name_en} products from authentic American brands, available through Abron Shop for delivery to Ethiopia.`;
+  const categoryTitle = `${currentCat.name_en} in Ethiopia`;
+  const categoryDescription =
+    `Shop ${currentCat.name_en} from authentic American brands sourced from the USA and available through Abron Shop in Ethiopia. Browse prices, sizes and availability.`;
   const breadcrumbItems = [
     { '@type': 'ListItem', position: 1, name: 'Home', item: pageUrl('/') },
     ...ancestors.map((category, index) => ({
@@ -274,19 +276,37 @@ export default function CategoryPage() {
       item: pageUrl(`/category/${category.slug}`),
     })),
   ];
+  const productListSchema = products.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: `${currentCat.name_en} products`,
+        numberOfItems: products.length,
+        itemListElement: products.slice(0, 24).map((product, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: product.name,
+          url: pageUrl(`/products/${product.slug}`),
+        })),
+      }
+    : null;
 
   return (
     <>
       <Seo
-        title={`${currentCat.name_en} Products`}
+        title={categoryTitle}
         description={categoryDescription}
         path={categoryPath}
         image={currentCat.image_url}
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: breadcrumbItems,
-        }}
+        noindex={!loading && !productsError && products.length === 0}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: breadcrumbItems,
+          },
+          productListSchema,
+        ]}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumbs */}
@@ -329,6 +349,9 @@ export default function CategoryPage() {
         <p className="text-sm text-ink-muted mt-1">
           {visibleProducts.length}{' '}
           {visibleProducts.length === 1 ? 'item' : 'items'}
+        </p>
+        <p className="mt-5 max-w-4xl text-sm leading-7 text-ink-soft md:text-base">
+          {categoryDescription}
         </p>
       </header>
 

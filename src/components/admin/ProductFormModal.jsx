@@ -166,6 +166,8 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     defaultValues: product
       ? {
           name: product.name,
+          product_type:
+            product.product_type === 'Product' ? '' : product.product_type || '',
           name_am: product.name_am || '',
           name_or: product.name_or || '',
           description: product.description,
@@ -188,6 +190,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         }
       : {
           name: '',
+          product_type: '',
           name_am: '',
           name_or: '',
           description: '',
@@ -347,6 +350,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
       const payload = {
         name: data.name.trim(),
+        product_type: data.product_type.trim(),
         name_am: data.name_am?.trim() || null,
         name_or: data.name_or?.trim() || null,
         description: data.description,
@@ -415,6 +419,47 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             />
             {errors.name && (
               <p className="text-sale text-xs mt-1">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+              What type of product is this? *
+            </label>
+            <input
+              type="text"
+              list="product-type-suggestions"
+              maxLength={120}
+              className={
+                errors.product_type ? `${inputClass} border-sale` : inputClass
+              }
+              placeholder="For example: running shoes, dress, face cream"
+              {...register('product_type', {
+                required: 'Product type is required',
+                validate: (value) =>
+                  value.trim() !== '' || 'Product type is required',
+              })}
+            />
+            <datalist id="product-type-suggestions">
+              <option value="Running shoes" />
+              <option value="Casual shoes" />
+              <option value="Sneakers" />
+              <option value="Dress" />
+              <option value="Shirt" />
+              <option value="Jacket" />
+              <option value="Handbag" />
+              <option value="Face cream" />
+              <option value="Perfume" />
+              <option value="Cosmetics" />
+            </datalist>
+            <p className="mt-1 text-xs text-ink-muted">
+              Use the specific item type, not Men, Women, or Kids. This is used
+              automatically in search descriptions.
+            </p>
+            {errors.product_type && (
+              <p className="text-sale text-xs mt-1">
+                {errors.product_type.message}
+              </p>
             )}
           </div>
 
