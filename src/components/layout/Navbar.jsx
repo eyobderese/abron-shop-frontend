@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
@@ -64,18 +64,23 @@ function SearchForm({ initial = '', onSubmitted, mobile = false }) {
   );
 }
 
-function MegaMenu({ node, lang }) {
+function MegaMenu({ node, lang, isOpen, onNavigate }) {
   // Group grandchildren under each child column.
   const columns = node.children?.length ? node.children : [];
 
   return (
-    <div className="absolute left-0 right-0 top-full hidden group-hover:block group-focus-within:block bg-white border-t border-gray-100 shadow-lg z-40">
+    <div
+      className={`absolute left-0 right-0 top-full bg-white border-t border-gray-100 shadow-lg z-40 ${
+        isOpen ? 'block' : 'hidden group-focus-within:block'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {columns.map((col) => (
             <div key={col.id}>
               <Link
                 to={`/category/${col.slug}`}
+                onClick={onNavigate}
                 className="block text-sm font-bold uppercase tracking-wider text-ink hover:text-sale mb-3 no-underline"
               >
                 {catLabel(col, lang)}
@@ -86,6 +91,7 @@ function MegaMenu({ node, lang }) {
                     <li key={leaf.id}>
                       <Link
                         to={`/category/${leaf.slug}`}
+                        onClick={onNavigate}
                         className="text-sm text-ink-soft hover:text-sale hover:underline no-underline"
                       >
                         {catLabel(leaf, lang)}
@@ -100,6 +106,7 @@ function MegaMenu({ node, lang }) {
             <div className="col-span-4">
               <Link
                 to={`/category/${node.slug}`}
+                onClick={onNavigate}
                 className="text-sm text-ink-soft hover:underline"
               >
                 Shop all {catLabel(node, lang)}
@@ -158,12 +165,40 @@ function MobileTreeItem({ node, onClose, lang, depth = 0 }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const closeTimerRef = useRef(null);
   const { tree } = useCategories();
   const { lang } = useLang();
   const d = dict(lang);
 
   const topBarAmharic = '🇺🇸 → 🇪🇹 ከአሜሪካ ወደ ኢትዮጵያ — ቀጥታ ዕቃ';
   const topBarOromo = '🇺🇸 → 🇪🇹 USA → Itoophiyaa — Kallattiin';
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  function openMenu(categoryId) {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+    setActiveMenuId(categoryId);
+  }
+
+  function scheduleMenuClose() {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setActiveMenuId(null);
+      closeTimerRef.current = null;
+    }, 220);
+  }
+
+  function closeMenu() {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+    setActiveMenuId(null);
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white">
@@ -232,9 +267,27 @@ export default function Navbar() {
             {tree.map((cat) => {
               const local = lang === 'or' ? cat.name_or : cat.name_am;
               return (
-                <div key={cat.id} className="group static">
+                <div
+                  key={cat.id}
+                  className="group static flex h-full items-center"
+                  onMouseEnter={() => openMenu(cat.id)}
+                  onMouseLeave={scheduleMenuClose}
+                  onFocus={() => openMenu(cat.id)}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      scheduleMenuClose();
+                    }
+                  }}
+                >
                   <NavLink
                     to={`/category/${cat.slug}`}
+                    onClick={closeMenu}
+                    aria-haspopup={cat.children?.length > 0 ? 'true' : undefined}
+                    aria-expanded={
+                      cat.children?.length > 0
+                        ? activeMenuId === cat.id
+                        : undefined
+                    }
                     className={({ isActive }) =>
                       `px-3 py-2 text-sm font-semibold uppercase tracking-wider no-underline inline-block ${
                         isActive ? 'text-sale' : 'text-ink hover:text-sale'
@@ -253,7 +306,12 @@ export default function Navbar() {
                     )}
                   </NavLink>
                   {cat.children?.length > 0 && (
-                    <MegaMenu node={cat} lang={lang} />
+                    <MegaMenu
+                      node={cat}
+                      lang={lang}
+                      isOpen={activeMenuId === cat.id}
+                      onNavigate={closeMenu}
+                    />
                   )}
                 </div>
               );
