@@ -37,6 +37,12 @@ export default function Footer() {
               Authentic American brands delivered to Ethiopia. Browse, inquire,
               and we handle sourcing + shipping.
             </p>
+            <Link
+              to="/brands"
+              className="mt-3 inline-block text-xs font-bold uppercase tracking-wider text-white underline"
+            >
+              Shop by brand
+            </Link>
           </div>
 
           {topCats.map((cat) => (
