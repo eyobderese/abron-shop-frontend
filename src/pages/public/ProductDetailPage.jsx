@@ -21,6 +21,7 @@ import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
 import { getProductViews } from '../../lib/productViews';
 import { formatMoney, productCurrency } from '../../lib/currency';
 import ProductCard from '../../components/ui/ProductCard';
+import { publicSlug } from '../../lib/slugs';
 import LoadError from '../../components/ui/LoadError';
 
 function pct(was, now) {
@@ -271,9 +272,12 @@ export default function ProductDetailPage() {
 
         <div>
           {product.brand && (
-            <p className="text-sm font-bold uppercase tracking-wider text-ink mb-1">
+            <Link
+              to={`/brands/${publicSlug(product.brand)}`}
+              className="mb-1 inline-block text-sm font-bold uppercase tracking-wider text-ink no-underline hover:text-sale hover:underline"
+            >
               {product.brand}
-            </p>
+            </Link>
           )}
           <h1 className="text-2xl md:text-3xl font-semibold text-ink mb-1">
             {product.name}

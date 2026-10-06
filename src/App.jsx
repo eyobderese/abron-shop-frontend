@@ -13,6 +13,8 @@ import CategoryPage from './pages/public/CategoryPage';
 import CategoriesPage from './pages/public/CategoriesPage';
 import ProductDetailPage from './pages/public/ProductDetailPage';
 import SearchPage from './pages/public/SearchPage';
+import BrandsPage from './pages/public/BrandsPage';
+import BrandPage from './pages/public/BrandPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 
 // Admin pages
@@ -60,6 +62,8 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/brands" element={<BrandsPage />} />
+            <Route path="/brands/:slug" element={<BrandPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/products/:slug" element={<ProductDetailPage />} />
