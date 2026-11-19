@@ -10,6 +10,13 @@
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
     },
     {
+      "source": "/partner/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    },
+    {
       "source": "/search",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
     }

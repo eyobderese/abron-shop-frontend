@@ -18,10 +18,5 @@ export function useInquiries() {
     refresh();
   }, []);
 
-  async function updateStatus(id, status) {
-    await api.patch(`/admin/inquiries/${encodeURIComponent(id)}/status`, { status });
-    await refresh();
-  }
-
-  return { inquiries, loading, updateStatus, refresh };
+  return { inquiries, loading, refresh };
 }

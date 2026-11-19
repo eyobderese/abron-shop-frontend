@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -16,6 +17,8 @@ import SearchPage from './pages/public/SearchPage';
 import BrandsPage from './pages/public/BrandsPage';
 import BrandPage from './pages/public/BrandPage';
 import NotFoundPage from './pages/public/NotFoundPage';
+import PartnerPage from './pages/public/PartnerPage';
+import { captureRefFromSearch } from './lib/promo';
 
 // Admin pages
 import AdminLoginPage from './pages/admin/AdminLoginPage';
@@ -24,8 +27,14 @@ import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminAdsPage from './pages/admin/AdminAdsPage';
 import AdminInquiriesPage from './pages/admin/AdminInquiriesPage';
+import AdminMarketersPage from './pages/admin/AdminMarketersPage';
 
 function PublicLayout() {
+  const { search } = useLocation();
+  useEffect(() => {
+    captureRefFromSearch(search);
+  }, [search]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -86,6 +95,9 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 
+          {/* Marketer partner portal (private link, no site chrome) */}
+          <Route path="/partner/:token" element={<PartnerPage />} />
+
           <Route element={<AdminLayout />}>
             {/* Admin auth (no public layout) */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -97,6 +109,7 @@ export default function App() {
               <Route path="/admin/products" element={<AdminProductsPage />} />
               <Route path="/admin/ads" element={<AdminAdsPage />} />
               <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
+              <Route path="/admin/marketers" element={<AdminMarketersPage />} />
             </Route>
           </Route>
         </Routes>

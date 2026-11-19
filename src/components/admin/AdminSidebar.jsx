@@ -7,6 +7,7 @@ import {
   X,
   FolderTree,
   Megaphone,
+  BadgePercent,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +19,7 @@ const links = [
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/ads', icon: Megaphone, label: 'Ads' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
+  { to: '/admin/marketers', icon: BadgePercent, label: 'Marketers' },
 ];
 
 export default function AdminSidebar({ open, onClose }) {
