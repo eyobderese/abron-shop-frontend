@@ -7,6 +7,7 @@ import { dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import { formatMoney } from '../../lib/currency';
 import { getStoredPromo, normalizePromo } from '../../lib/promo';
+import InquirySuccessModal from './InquirySuccessModal';
 
 export default function InquiryForm({ product, selectedSize = '' }) {
   const [submitting, setSubmitting] = useState(false);
@@ -14,7 +15,7 @@ export default function InquiryForm({ product, selectedSize = '' }) {
   const [promo, setPromo] = useState(null); // validated preview: { code, quoted_price, ... }
   const [promoError, setPromoError] = useState('');
   const [checkingPromo, setCheckingPromo] = useState(false);
-  const [telegramUrl, setTelegramUrl] = useState(null);
+  const [submitted, setSubmitted] = useState(null); // saved inquiry -> success pop-up
   const { lang } = useLang();
   const d = dict(lang);
   const amharic = lang !== 'or';
@@ -84,12 +85,7 @@ export default function InquiryForm({ product, selectedSize = '' }) {
         message: data.message || null,
         promo_code: code || null,
       });
-      setTelegramUrl(created?.telegram_updates_url || null);
-      toast.success(
-        amharic
-          ? `Thank you! We'll contact you soon. · እናመሰግናለን!`
-          : `Thank you! We'll contact you soon. · Galatoomaa!`
-      );
+      setSubmitted(created);
       reset();
     } catch (err) {
       toast.error(err.message || 'Failed to submit inquiry. Please try again.');
@@ -265,23 +261,13 @@ export default function InquiryForm({ product, selectedSize = '' }) {
         </button>
       </form>
 
-      {telegramUrl && (
-        <div className="mt-4 border border-sky-200 bg-sky-50 p-4 text-sm">
-          <p className="font-semibold text-ink">Get updates about your order on Telegram</p>
-          <p className="text-ink-soft text-xs mt-1">
-            We&apos;ll message you when your order is confirmed — and you can confirm any
-            change yourself.
-          </p>
-          <a
-            href={telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-2 bg-[#229ED9] text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-90"
-          >
-            <Send size={13} /> Open Telegram ·{' '}
-            <span className={amharic ? 'font-amharic' : ''}>{d.telegramUpdates}</span>
-          </a>
-        </div>
+      {submitted && (
+        <InquirySuccessModal
+          inquiry={submitted}
+          d={d}
+          amharic={amharic}
+          onClose={() => setSubmitted(null)}
+        />
       )}
     </div>
   );

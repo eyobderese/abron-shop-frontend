@@ -28,6 +28,9 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminAdsPage from './pages/admin/AdminAdsPage';
 import AdminInquiriesPage from './pages/admin/AdminInquiriesPage';
 import AdminMarketersPage from './pages/admin/AdminMarketersPage';
+import AdminTeamPage from './pages/admin/AdminTeamPage';
+import AdminFeedbackPage from './pages/admin/AdminFeedbackPage';
+import { PRODUCT_ROLES, STAFF_ROLES, TEAM_ROLES } from './lib/roles';
 
 function PublicLayout() {
   const { search } = useLocation();
@@ -102,14 +105,20 @@ export default function App() {
             {/* Admin auth (no public layout) */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
 
-            {/* Protected admin routes */}
-            <Route element={<ProtectedRoute />}>
+            {/* Protected admin routes (the API enforces the same rules) */}
+            <Route element={<ProtectedRoute roles={PRODUCT_ROLES} />}>
+              <Route path="/admin/products" element={<AdminProductsPage />} />
+            </Route>
+            <Route element={<ProtectedRoute roles={STAFF_ROLES} />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/categories" element={<AdminCategoriesPage />} />
-              <Route path="/admin/products" element={<AdminProductsPage />} />
               <Route path="/admin/ads" element={<AdminAdsPage />} />
               <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
               <Route path="/admin/marketers" element={<AdminMarketersPage />} />
+              <Route path="/admin/feedback" element={<AdminFeedbackPage />} />
+            </Route>
+            <Route element={<ProtectedRoute roles={TEAM_ROLES} />}>
+              <Route path="/admin/team" element={<AdminTeamPage />} />
             </Route>
           </Route>
         </Routes>

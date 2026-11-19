@@ -8,6 +8,7 @@ import { dict, catLocal } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import Seo, { SITE_URL } from '../../components/seo/Seo';
 import BrandLogo from '../../components/ui/BrandLogo';
+import LoadError from '../../components/ui/LoadError';
 
 function DealStrip({ lang }) {
   const d = dict(lang);
@@ -36,8 +37,19 @@ function DealStrip({ lang }) {
 }
 
 export default function HomePage() {
-  const { tree, categories } = useCategories();
-  const { products } = useProducts({ limit: 24 });
+  const {
+    tree,
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories();
+  const {
+    products,
+    error: productsError,
+    refetch: refetchProducts,
+  } = useProducts({ limit: 24 });
+  const loadError = categoriesError || productsError;
   const { lang } = useLang();
   const d = dict(lang);
   const amharic = lang !== 'or';
@@ -344,18 +356,30 @@ export default function HomePage() {
         );
       })}
 
-      {categories.length === 0 && (
-        <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-          <p className="text-sm text-ink-muted">
-            No categories yet. Log in as admin to create your first category.
-          </p>
-          <Link
-            to="/admin/login"
-            className="inline-block mt-4 text-sm font-bold uppercase tracking-wider text-ink underline"
-          >
-            Admin Login
-          </Link>
-        </section>
+      {/* Customers never see admin links here: a failed request (offline, server down)
+          shows a retry, and an empty catalogue shows a neutral message. */}
+      {loadError ? (
+        <LoadError
+          title="Could not load products"
+          message={
+            loadError.isNetworkError
+              ? loadError.message
+              : 'Something went wrong while loading products. Please try again.'
+          }
+          onRetry={() => {
+            if (categoriesError) refetchCategories();
+            if (productsError) refetchProducts();
+          }}
+        />
+      ) : (
+        !categoriesLoading &&
+        categories.length === 0 && (
+          <section className="max-w-3xl mx-auto px-4 py-20 text-center">
+            <p className="text-sm text-ink-muted">
+              New products are coming soon. Please check back shortly.
+            </p>
+          </section>
+        )
       )}
       </div>
     </>

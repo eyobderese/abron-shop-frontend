@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { homePathFor } from '../../lib/roles';
 import { useEffect } from 'react';
 import BrandLogo from '../../components/ui/BrandLogo';
 
@@ -14,7 +15,7 @@ export default function AdminLoginPage() {
   const { session, login } = useAuth();
 
   useEffect(() => {
-    if (session) navigate('/admin');
+    if (session) navigate(homePathFor(session));
   }, [session, navigate]);
 
   async function handleSubmit(e) {
@@ -23,8 +24,8 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/admin');
+      const result = await login(email, password);
+      navigate(homePathFor({ user: result.user }));
     } catch (err) {
       setError(err.message);
       setLoading(false);
