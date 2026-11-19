@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin/
 Disallow: /admin
 Disallow: /search
+Disallow: /partner/
 
 Sitemap: https://abronshop.online/sitemap.xml

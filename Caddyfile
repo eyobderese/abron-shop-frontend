@@ -9,6 +9,11 @@
 
     @noindex path /admin* /search*
     header @noindex X-Robots-Tag "noindex, follow"
+    @partner path /partner/*
+    header @partner {
+        X-Robots-Tag "noindex, nofollow"
+        Referrer-Policy "no-referrer"
+    }
 
     handle /sitemap.xml {
         rewrite * /api/v1/seo/sitemap.xml

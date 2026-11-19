@@ -1,13 +1,20 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Tag, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/apiClient';
 import { dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
+import { formatMoney } from '../../lib/currency';
+import { getStoredPromo, normalizePromo } from '../../lib/promo';
 
 export default function InquiryForm({ product, selectedSize = '' }) {
   const [submitting, setSubmitting] = useState(false);
+  const [promoInput, setPromoInput] = useState(() => getStoredPromo());
+  const [promo, setPromo] = useState(null); // validated preview: { code, quoted_price, ... }
+  const [promoError, setPromoError] = useState('');
+  const [checkingPromo, setCheckingPromo] = useState(false);
+  const [telegramUrl, setTelegramUrl] = useState(null);
   const { lang } = useLang();
   const d = dict(lang);
   const amharic = lang !== 'or';
@@ -24,21 +31,60 @@ export default function InquiryForm({ product, selectedSize = '' }) {
   const inputClass = `${base} border-gray-300 focus:ring-ink focus:border-ink`;
   const errorInputClass = `${base} border-sale focus:ring-sale focus:border-sale`;
 
+  async function applyPromo() {
+    const code = normalizePromo(promoInput);
+    setPromoError('');
+    setPromo(null);
+    if (!code) return null;
+    setCheckingPromo(true);
+    try {
+      const result = await api.post('/promo-codes/validate', {
+        code,
+        product_id: product.id,
+      });
+      if (!result.valid) {
+        setPromoError(result.message || 'This promo code is not valid');
+        return false;
+      }
+      setPromo(result);
+      return result;
+    } catch (err) {
+      setPromoError(err.message || 'Could not check the code');
+      return false;
+    } finally {
+      setCheckingPromo(false);
+    }
+  }
+
+  function clearPromo() {
+    setPromoInput('');
+    setPromo(null);
+    setPromoError('');
+  }
+
   async function onSubmit(data) {
     if (sizes.length > 0 && !sizes.includes(selectedSize)) {
       toast.error('Please select an available size above.');
       return;
     }
+    const code = normalizePromo(promoInput);
+    if (code && promo?.code !== code) {
+      // Typed but not applied yet: check it now so the customer sees the price they get.
+      const ok = await applyPromo();
+      if (!ok) return;
+    }
     setSubmitting(true);
     try {
-      await api.post('/inquiries', {
+      const created = await api.post('/inquiries', {
         product_id: product.id,
         full_name: data.full_name,
         phone: data.phone,
         telegram: data.telegram,
         selected_size: selectedSize || null,
         message: data.message || null,
+        promo_code: code || null,
       });
+      setTelegramUrl(created?.telegram_updates_url || null);
       toast.success(
         amharic
           ? `Thank you! We'll contact you soon. · እናመሰግናለን!`
@@ -134,6 +180,81 @@ export default function InquiryForm({ product, selectedSize = '' }) {
           />
         </div>
 
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1">
+            Promo Code · <span className={amharic ? 'font-amharic' : ''}>{d.promoCode}</span>
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Tag
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+              />
+              <input
+                type="text"
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value.toUpperCase());
+                  setPromo(null);
+                  setPromoError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyPromo();
+                  }
+                }}
+                className={`${promoError ? errorInputClass : inputClass} pl-8 uppercase`}
+                placeholder="Optional"
+                maxLength={30}
+                autoComplete="off"
+              />
+            </div>
+            {promo ? (
+              <button
+                type="button"
+                onClick={clearPromo}
+                className="border border-gray-300 px-3 text-xs font-bold uppercase tracking-wider hover:bg-gray-100"
+                aria-label="Remove promo code"
+              >
+                <X size={14} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={applyPromo}
+                disabled={!promoInput.trim() || checkingPromo}
+                className="border border-ink px-4 text-xs font-bold uppercase tracking-wider hover:bg-ink hover:text-white transition-colors disabled:opacity-40"
+              >
+                {checkingPromo ? '…' : <>Apply · <span className={amharic ? 'font-amharic' : ''}>{d.apply}</span></>}
+              </button>
+            )}
+          </div>
+          {promoError && <p className="text-sale text-xs mt-1">{promoError}</p>}
+          {promo && (
+            <div className="mt-2 border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
+              <p className="font-semibold text-emerald-800">
+                {promo.code} applied — {promo.discount_label}
+              </p>
+              {promo.quoted_price != null ? (
+                <p className="text-ink mt-0.5">
+                  Your price · <span className={amharic ? 'font-amharic' : ''}>{d.yourPrice}</span>:{' '}
+                  <span className="line-through text-ink-muted mr-1">
+                    {formatMoney(promo.list_price, promo.currency)}
+                  </span>
+                  <span className="font-bold text-sale">
+                    {formatMoney(promo.quoted_price, promo.currency)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-ink-soft mt-0.5">
+                  The discount will be applied in your quote.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
         <button
           type="submit"
           disabled={submitting}
@@ -143,6 +264,25 @@ export default function InquiryForm({ product, selectedSize = '' }) {
           {submitting ? 'Sending…' : `Send Inquiry · ${d.send}`}
         </button>
       </form>
+
+      {telegramUrl && (
+        <div className="mt-4 border border-sky-200 bg-sky-50 p-4 text-sm">
+          <p className="font-semibold text-ink">Get updates about your order on Telegram</p>
+          <p className="text-ink-soft text-xs mt-1">
+            We&apos;ll message you when your order is confirmed — and you can confirm any
+            change yourself.
+          </p>
+          <a
+            href={telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 bg-[#229ED9] text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:opacity-90"
+          >
+            <Send size={13} /> Open Telegram ·{' '}
+            <span className={amharic ? 'font-amharic' : ''}>{d.telegramUpdates}</span>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
