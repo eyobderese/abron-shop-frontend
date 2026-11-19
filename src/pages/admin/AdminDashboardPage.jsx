@@ -10,7 +10,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { products, loading: productsLoading } = useProducts();
-  const { inquiries, loading: inquiriesLoading, updateStatus } = useInquiries();
+  const { inquiries, loading: inquiriesLoading, refresh } = useInquiries();
 
   const newInquiries = inquiries.filter((i) => i.status === 'new');
   const recentInquiries = inquiries.slice(0, 5);
@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
                 {recentInquiries.length > 0 ? (
                   <InquiryTable
                     inquiries={recentInquiries}
-                    onStatusChange={updateStatus}
+                    onChanged={refresh}
                   />
                 ) : (
                   <p className="text-gray-400 text-center py-8">
