@@ -8,23 +8,29 @@ import {
   FolderTree,
   Megaphone,
   BadgePercent,
+  Star,
+  Users,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import BrandLogo from '../ui/BrandLogo';
+import { PRODUCT_ROLES, ROLE_LABELS, STAFF_ROLES, TEAM_ROLES, hasRole } from '../../lib/roles';
 
 const links = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
-  { to: '/admin/categories', icon: FolderTree, label: 'Categories' },
-  { to: '/admin/products', icon: Package, label: 'Products' },
-  { to: '/admin/ads', icon: Megaphone, label: 'Ads' },
-  { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
-  { to: '/admin/marketers', icon: BadgePercent, label: 'Marketers' },
+  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, roles: STAFF_ROLES },
+  { to: '/admin/categories', icon: FolderTree, label: 'Categories', roles: STAFF_ROLES },
+  { to: '/admin/products', icon: Package, label: 'Products', roles: PRODUCT_ROLES },
+  { to: '/admin/ads', icon: Megaphone, label: 'Ads', roles: STAFF_ROLES },
+  { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries', roles: STAFF_ROLES },
+  { to: '/admin/marketers', icon: BadgePercent, label: 'Marketers', roles: STAFF_ROLES },
+  { to: '/admin/feedback', icon: Star, label: 'Feedback', roles: STAFF_ROLES },
+  { to: '/admin/team', icon: Users, label: 'Team', roles: TEAM_ROLES },
 ];
 
 export default function AdminSidebar({ open, onClose }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, session } = useAuth();
+  const visibleLinks = links.filter((link) => hasRole(session, link.roles));
 
   async function handleLogout() {
     await logout();
@@ -49,6 +55,11 @@ export default function AdminSidebar({ open, onClose }) {
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
             Admin Panel
           </p>
+          {session?.user && (
+            <p className="mt-0.5 text-[11px] text-gray-400 truncate max-w-[180px]" title={session.user.email}>
+              {session.user.email} · {ROLE_LABELS[session.user.role] || session.user.role}
+            </p>
+          )}
         </div>
         <button
           className="lg:hidden p-1 rounded hover:bg-gray-100"
@@ -60,7 +71,7 @@ export default function AdminSidebar({ open, onClose }) {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {links.map((link) => (
+        {visibleLinks.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}

@@ -8,8 +8,13 @@ import CategoryBadge from '../../components/ui/CategoryBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { formatMoney, productCurrency } from '../../lib/currency';
+import { useAuth } from '../../context/AuthContext';
+import { STAFF_ROLES, hasRole } from '../../lib/roles';
 
 export default function AdminProductsPage() {
+  const { session } = useAuth();
+  // Product editors can add and edit but not delete (the API refuses it too).
+  const canDelete = hasRole(session, STAFF_ROLES);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -223,12 +228,15 @@ export default function AdminProductsPage() {
                             >
                               <Pencil size={14} />
                             </button>
-                            <button
-                              onClick={() => handleDelete(product)}
-                              className="p-1.5 text-ink-muted hover:bg-red-50 hover:text-sale"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            {canDelete && (
+                              <button
+                                onClick={() => handleDelete(product)}
+                                className="p-1.5 text-ink-muted hover:bg-red-50 hover:text-sale"
+                                title="Delete product"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
