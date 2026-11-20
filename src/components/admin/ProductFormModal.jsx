@@ -364,7 +364,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         color_code: data.color_code?.trim() || null,
         color_hex: data.color_hex?.trim() || null,
         variant_sort_order: Number(data.variant_sort_order) || 0,
-        price: data.price === '' ? null : Number(data.price),
+        price: Number(data.price),
         was_price: data.was_price === '' ? null : Number(data.was_price),
         currency: data.currency || DEFAULT_CURRENCY,
         size_type: data.size_type || 'NONE',
@@ -715,15 +715,23 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-                Price
+                Price *
               </label>
               <input
                 type="number"
                 step="0.01"
-                className={inputClass}
+                min="0.01"
+                className={errors.price ? `${inputClass} border-sale` : inputClass}
                 placeholder="0.00"
-                {...register('price')}
+                {...register('price', {
+                  required: 'Price is required',
+                  validate: (value) =>
+                    Number(value) > 0 || 'Price must be greater than 0',
+                })}
               />
+              {errors.price && (
+                <p className="text-sale text-xs mt-1">{errors.price.message}</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
