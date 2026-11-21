@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
   });
   const { slug, id } = useParams();
   const identifier = slug || id;
-  const { product, loading, error, refetch } = useProduct(identifier);
+  const { product, loading, error } = useProduct(identifier);
   const { products: colorVariants } = useProductVariants(identifier);
   const { products: relatedProducts, loading: relatedLoading } =
     useRelatedProducts(identifier, 8);
@@ -131,7 +131,6 @@ export default function ProductDetailPage() {
         <LoadError
           title="Could not load the product"
           message={error.message}
-          onRetry={refetch}
         />
       </>
     );

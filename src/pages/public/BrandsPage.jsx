@@ -6,7 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { useBrands } from '../../hooks/useBrands';
 
 export default function BrandsPage() {
-  const { brands, loading, error, refetch } = useBrands();
+  const { brands, loading, error } = useBrands();
   const featuredBrandNames = brands.slice(0, 4).map((brand) => brand.name);
   const description = featuredBrandNames.length
     ? `Browse ${featuredBrandNames.join(', ')} and other authentic brands available through Abron Shop in Addis Ababa and across Ethiopia.`
@@ -47,7 +47,7 @@ export default function BrandsPage() {
         </header>
 
         {error ? (
-          <LoadError title="Could not load brands" message={error.message} onRetry={refetch} />
+          <LoadError title="Could not load brands" message={error.message} />
         ) : loading ? (
           <LoadingSpinner />
         ) : brands.length === 0 ? (

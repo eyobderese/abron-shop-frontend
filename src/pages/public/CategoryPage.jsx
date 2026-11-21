@@ -131,7 +131,6 @@ export default function CategoryPage() {
     tree,
     loading: catsLoading,
     error: categoriesError,
-    refetch: refetchCategories,
   } = useCategories();
   const { lang } = useLang();
   const d = dict(lang);
@@ -151,7 +150,6 @@ export default function CategoryPage() {
     products,
     loading,
     error: productsError,
-    refetch: refetchProducts,
   } = useProducts({
     categoryIds: ids.length ? ids : undefined,
   });
@@ -222,7 +220,6 @@ export default function CategoryPage() {
         <LoadError
           title="Could not load the category"
           message={categoriesError.message}
-          onRetry={refetchCategories}
         />
       </>
     );
@@ -382,7 +379,6 @@ export default function CategoryPage() {
             <LoadError
               title="Could not load products"
               message={productsError.message}
-              onRetry={refetchProducts}
             />
           ) : loading ? (
             <LoadingSpinner />

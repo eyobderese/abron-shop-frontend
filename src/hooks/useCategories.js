@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { api } from '../lib/apiClient';
+import { useRetryWhenFailed } from '../lib/retry';
 
 // Flat list → tree. Each returned node carries a .children array (possibly empty).
 export function buildTree(flat) {
@@ -74,6 +75,7 @@ export function useCategories() {
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       setCategories((await api.get('/categories')) || []);
       setError(null);
@@ -87,6 +89,8 @@ export function useCategories() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useRetryWhenFailed(!!error, fetchCategories);
 
   const tree = useMemo(() => buildTree(categories), [categories]);
 

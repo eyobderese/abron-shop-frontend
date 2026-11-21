@@ -63,9 +63,8 @@ function HeroCollage({ products }) {
     .map((p) => ({ product: p, url: getProductViews(p)[0]?.url }))
     .filter((x) => x.url)
     .slice(0, 3);
-  if (pics.length === 0) {
-    return <div className="hidden md:block aspect-square bg-white" />;
-  }
+  // No photos (still loading or the request failed): show nothing rather than an empty white box.
+  if (pics.length === 0) return null;
   const [main, ...rest] = pics;
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -90,13 +89,11 @@ export default function HomePage() {
     categories,
     loading: categoriesLoading,
     error: categoriesError,
-    refetch: refetchCategories,
   } = useCategories();
   const {
     products,
     loading: productsLoading,
     error: productsError,
-    refetch: refetchProducts,
   } = useProducts({ limit: 24 });
   const { brands } = useBrands();
   const loadError = categoriesError || productsError;
@@ -128,6 +125,21 @@ export default function HomePage() {
           faqSchema(),
         ]}
       />
+
+      {/* A failed request (offline, server down) shows the retry first, where customers
+          look — never admin links. */}
+      {loadError && (
+        <div className="border-b border-gray-200">
+          <LoadError
+            title="Could not load products"
+            message={
+              loadError.isNetworkError
+                ? loadError.message
+                : 'Something went wrong while loading products. Please try again.'
+            }
+          />
+        </div>
+      )}
 
       {/* Hero: what we sell + the payment promise, with real products */}
       <section className="bg-gray-100">
@@ -190,7 +202,7 @@ export default function HomePage() {
       <FlashDealsSection amharic={amharic} />
 
       {/* New arrivals: one even grid instead of half-empty category strips */}
-      <section id="new-arrivals" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-mt-32">
+      <section id="new-arrivals" hidden={!!loadError} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-mt-32">
         <SectionTitle
           en="New Arrivals"
           sub={amharic ? 'አዲስ የገቡ ዕቃዎች' : 'Meeshaalee haaraa'}
@@ -358,28 +370,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Customers never see admin links here: a failed request (offline, server down)
-          shows a retry, and an empty catalogue shows a neutral message. */}
-      {loadError ? (
-        <LoadError
-          title="Could not load products"
-          message={
-            loadError.isNetworkError
-              ? loadError.message
-              : 'Something went wrong while loading products. Please try again.'
-          }
-          onRetry={() => {
-            if (categoriesError) refetchCategories();
-            if (productsError) refetchProducts();
-          }}
-        />
-      ) : (
-        !categoriesLoading &&
-        categories.length === 0 && (
-          <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-            <p className="text-sm text-ink-muted">New products are coming soon. Please check back shortly.</p>
-          </section>
-        )
+      {/* An empty catalogue shows a neutral message (never admin links). */}
+      {!loadError && !categoriesLoading && categories.length === 0 && (
+        <section className="max-w-3xl mx-auto px-4 py-20 text-center">
+          <p className="text-sm text-ink-muted">New products are coming soon. Please check back shortly.</p>
+        </section>
       )}
     </>
   );
