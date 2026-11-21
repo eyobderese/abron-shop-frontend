@@ -30,6 +30,14 @@
       "source": "/sitemap.xml",
       "destination": "https://api.abronshop.online/api/v1/seo/sitemap.xml"
     },
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.abronshop.online/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://api.abronshop.online/uploads/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
