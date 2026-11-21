@@ -191,6 +191,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           size_type: product.size_type || 'NONE',
           sizes: cleanSizes(product.sizes),
           in_stock: product.in_stock,
+          featured_in_hero: isDuplicate ? false : !!product.featured_in_hero,
         }
       : {
           name: '',
@@ -217,6 +218,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           size_type: 'NONE',
           sizes: [],
           in_stock: true,
+          featured_in_hero: false,
         },
   });
 
@@ -378,6 +380,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         size_type: data.size_type || 'NONE',
         sizes: data.size_type === 'NONE' ? [] : sizes,
         in_stock: !!data.in_stock,
+        featured_in_hero: !!data.featured_in_hero,
         image_views,
         images,
       };
@@ -762,6 +765,22 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               {...register('in_stock')}
             />
             <span className="text-sm">In stock</span>
+          </label>
+
+          <label className="flex items-start gap-2 cursor-pointer border border-gray-200 p-3">
+            <input
+              type="checkbox"
+              className="accent-ink mt-0.5"
+              {...register('featured_in_hero')}
+            />
+            <span>
+              <span className="block text-sm font-semibold">★ Show in home page hero</span>
+              <span className="block text-xs text-ink-muted">
+                This product appears in the big box at the top of the home page, turning through its photos.
+                Only one product can be there — ticking this replaces the current one. Leave it unticked
+                everywhere and the site picks the newest shoe with 3+ photos.
+              </span>
+            </span>
           </label>
 
           <FlashDealFields

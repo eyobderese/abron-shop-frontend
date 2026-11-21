@@ -20,6 +20,7 @@ import { useLang } from '../../context/LanguageContext';
 import Seo, { SITE_URL } from '../../components/seo/Seo';
 import LoadError from '../../components/ui/LoadError';
 import FlashDealsSection from '../../components/flash/FlashDealsSection';
+import { useHeroProduct } from '../../hooks/useHeroProduct';
 import {
   CONTACTS,
   DEPOSIT_PERCENT,
@@ -79,8 +80,24 @@ function pickHeroProduct(products) {
 const VIEW_NAMES = { front: 'Front', back: 'Back', side: 'Side', detail: 'Detail', other: 'View' };
 
 /** One shoe, turning through its photos (front, side, back…) every few seconds. */
+/** The admin's chosen hero product, with its photos (lifestyle shots skipped when there are others). */
+function featuredPick(product) {
+  if (!product) return null;
+  const all = getProductViews(product);
+  const clean = all.filter((v) => v.label !== 'lifestyle');
+  const views = clean.length ? clean : all;
+  return views.length ? { product, views } : null;
+}
+
 function HeroShowcase({ products }) {
-  const pick = pickHeroProduct(products);
+  const hero = useHeroProduct();
+  // Wait for the admin's choice so the hero does not jump from one shoe to another.
+  if (!hero.ready) return <div className="hidden md:block bg-white aspect-[5/6] animate-pulse" />;
+  const pick = featuredPick(hero.product) || pickHeroProduct(products);
+  return <HeroRotator key={pick?.product.id || 'none'} pick={pick} />;
+}
+
+function HeroRotator({ pick }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = pick?.views.length || 0;

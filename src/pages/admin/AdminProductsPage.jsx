@@ -195,6 +195,11 @@ export default function AdminProductsPage() {
                               {formatMoney(product.was_price, productCurrency(product))}
                             </span>
                           )}
+                          {product.featured_in_hero && (
+                            <span className="block mt-1 text-[11px] font-bold text-ink" title="Shown in the home page hero">
+                              ★ Home hero
+                            </span>
+                          )}
                           {product.flash_deal && (
                             <span
                               className="block mt-1 text-[11px] font-bold text-orange-600"
