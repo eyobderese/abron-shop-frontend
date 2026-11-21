@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:prod-data": "API_PROXY_TARGET=https://api.abronshop.online VITE_API_URL=/api/v1 VITE_SITE_URL=https://abronshop.online vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
