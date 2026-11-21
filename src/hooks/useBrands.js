@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/apiClient';
+import { useRetryWhenFailed } from '../lib/retry';
 
 function useApiResource(path) {
   const [retryKey, setRetryKey] = useState(0);
@@ -27,6 +28,7 @@ function useApiResource(path) {
   }, [path, requestKey]);
 
   const refetch = useCallback(() => setRetryKey((value) => value + 1), []);
+  useRetryWhenFailed(result.requestKey === requestKey && !!result.error, refetch);
   if (result.requestKey !== requestKey) {
     return { data: null, loading: true, error: null, refetch };
   }

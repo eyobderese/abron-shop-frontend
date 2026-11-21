@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/apiClient';
+import { useRetryWhenFailed } from '../lib/retry';
 
 // opts:
 //   categoryIds: array of UUIDs — filter to products whose category_id ∈ set
@@ -44,6 +45,7 @@ export function useProducts(opts = {}) {
   }, [key, q, limit, retryKey]);
 
   const refetch = useCallback(() => setRetryKey((value) => value + 1), []);
+  useRetryWhenFailed(!!error, refetch);
   return { products, loading, error, refetch };
 }
 
@@ -72,6 +74,7 @@ export function useProduct(identifier) {
   }, [identifier, requestKey]);
 
   const refetch = useCallback(() => setRetryKey((value) => value + 1), []);
+  useRetryWhenFailed(result.requestKey === requestKey && !!result.error, refetch);
   if (result.requestKey !== requestKey) {
     return { product: null, loading: true, error: null, refetch };
   }

@@ -4,6 +4,7 @@ import { X, Upload, ChevronUp, ChevronDown, Languages, Plus } from 'lucide-react
 import toast from 'react-hot-toast';
 import { api } from '../../lib/apiClient';
 import { useAdminCategories } from '../../hooks/useCategories';
+import FlashDealFields, { flashPayload, toLocalInput } from './FlashDealFields';
 import {
   VIEW_LABEL_OPTIONS,
   defaultViewLabel,
@@ -183,10 +184,14 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           variant_sort_order: isDuplicate ? 0 : product.variant_sort_order || 0,
           price: product.price ?? '',
           was_price: product.was_price ?? '',
+          flash_price: isDuplicate ? '' : product.flash_price ?? '',
+          flash_starts_at: isDuplicate ? '' : toLocalInput(product.flash_starts_at),
+          flash_ends_at: isDuplicate ? '' : toLocalInput(product.flash_ends_at),
           currency: product.currency || DEFAULT_CURRENCY,
           size_type: product.size_type || 'NONE',
           sizes: cleanSizes(product.sizes),
           in_stock: product.in_stock,
+          featured_in_hero: isDuplicate ? false : !!product.featured_in_hero,
         }
       : {
           name: '',
@@ -206,10 +211,14 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           variant_sort_order: 0,
           price: '',
           was_price: '',
+          flash_price: '',
+          flash_starts_at: '',
+          flash_ends_at: '',
           currency: DEFAULT_CURRENCY,
           size_type: 'NONE',
           sizes: [],
           in_stock: true,
+          featured_in_hero: false,
         },
   });
 
@@ -366,10 +375,12 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         variant_sort_order: Number(data.variant_sort_order) || 0,
         price: Number(data.price),
         was_price: data.was_price === '' ? null : Number(data.was_price),
+        ...flashPayload(data),
         currency: data.currency || DEFAULT_CURRENCY,
         size_type: data.size_type || 'NONE',
         sizes: data.size_type === 'NONE' ? [] : sizes,
         in_stock: !!data.in_stock,
+        featured_in_hero: !!data.featured_in_hero,
         image_views,
         images,
       };
@@ -755,6 +766,30 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             />
             <span className="text-sm">In stock</span>
           </label>
+
+          <label className="flex items-start gap-2 cursor-pointer border border-gray-200 p-3">
+            <input
+              type="checkbox"
+              className="accent-ink mt-0.5"
+              {...register('featured_in_hero')}
+            />
+            <span>
+              <span className="block text-sm font-semibold">★ Show in home page hero</span>
+              <span className="block text-xs text-ink-muted">
+                This product appears in the big box at the top of the home page, turning through its photos.
+                Only one product can be there — ticking this replaces the current one. Leave it unticked
+                everywhere and the site picks the newest shoe with 3+ photos.
+              </span>
+            </span>
+          </label>
+
+          <FlashDealFields
+            control={control}
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            inputClass={inputClass}
+          />
 
           <div className="border border-gray-200 p-4 space-y-3">
             <div>

@@ -7,7 +7,7 @@ import { useLang } from '../../context/LanguageContext';
 import LoadError from '../../components/ui/LoadError';
 
 export default function CategoriesPage() {
-  const { categories, loading, error, refetch } = useCategories();
+  const { categories, loading, error } = useCategories();
   const { lang } = useLang();
   const categoryListSchema = categories.length > 0
     ? {
@@ -47,7 +47,6 @@ export default function CategoriesPage() {
           <LoadError
             title="Could not load categories"
             message={error.message}
-            onRetry={refetch}
           />
         ) : loading ? (
           <LoadingSpinner />

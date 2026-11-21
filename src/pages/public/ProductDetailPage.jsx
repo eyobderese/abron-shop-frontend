@@ -9,6 +9,8 @@ import {
 import { useCategories, getAncestors } from '../../hooks/useCategories';
 import ImageGallery from '../../components/ui/ImageGallery';
 import InquiryForm from '../../components/forms/InquiryForm';
+import TrustBox from '../../components/ui/TrustBox';
+import ProductPrice from '../../components/flash/ProductPrice';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import {
   catLabel,
@@ -19,17 +21,10 @@ import {
 import { useLang } from '../../context/LanguageContext';
 import Seo, { absoluteUrl, pageUrl } from '../../components/seo/Seo';
 import { getProductViews } from '../../lib/productViews';
-import { formatMoney, productCurrency } from '../../lib/currency';
+import { productCurrency } from '../../lib/currency';
 import ProductCard from '../../components/ui/ProductCard';
 import { publicSlug } from '../../lib/slugs';
 import LoadError from '../../components/ui/LoadError';
-
-function pct(was, now) {
-  const w = Number(was);
-  const n = Number(now);
-  if (!w || !n || n >= w) return null;
-  return Math.round(((w - n) / w) * 100);
-}
 
 function SizeSelector({ sizes, selectedSize, onSelect, lang }) {
   if (!sizes.length) return null;
@@ -98,7 +93,7 @@ export default function ProductDetailPage() {
   });
   const { slug, id } = useParams();
   const identifier = slug || id;
-  const { product, loading, error, refetch } = useProduct(identifier);
+  const { product, loading, error } = useProduct(identifier);
   const { products: colorVariants } = useProductVariants(identifier);
   const { products: relatedProducts, loading: relatedLoading } =
     useRelatedProducts(identifier, 8);
@@ -136,7 +131,6 @@ export default function ProductDetailPage() {
         <LoadError
           title="Could not load the product"
           message={error.message}
-          onRetry={refetch}
         />
       </>
     );
@@ -174,7 +168,6 @@ export default function ProductDetailPage() {
   const ancestors = product.category_id
     ? getAncestors(categories, product.category_id)
     : [];
-  const off = pct(product.was_price, product.price);
   const currency = productCurrency(product);
   const productPath = `/products/${product.slug}`;
   const productUrl = pageUrl(productPath);
@@ -210,7 +203,8 @@ export default function ProductDetailPage() {
         '@type': 'Offer',
         url: productUrl,
         priceCurrency: currency,
-        price: String(product.price),
+        price: String(product.flash_deal?.price ?? product.price),
+        ...(product.flash_deal && { priceValidUntil: product.flash_deal.ends_at }),
         availability: product.in_stock
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
@@ -354,25 +348,7 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          <div className="flex items-baseline gap-3 mb-4">
-            {product.price != null && (
-              <span
-                className={`text-2xl font-bold ${off != null ? 'text-sale' : 'text-ink'}`}
-              >
-                {formatMoney(product.price, currency)}
-              </span>
-            )}
-            {product.was_price != null && off != null && (
-              <>
-                <span className="text-base text-ink-muted line-through">
-                  {formatMoney(product.was_price, currency)}
-                </span>
-                <span className="bg-sale text-white text-xs font-bold px-2 py-0.5 uppercase">
-                  {off}% off
-                </span>
-              </>
-            )}
-          </div>
+          <ProductPrice key={product.id} product={product} amharic={amharic} />
 
           <div
             className={`inline-block px-3 py-1 text-xs font-medium uppercase tracking-wide mb-6 ${
@@ -404,6 +380,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          <TrustBox amharic={amharic} />
           <InquiryForm product={product} selectedSize={selectedSize} />
         </div>
       </div>

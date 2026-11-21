@@ -1,36 +1,165 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Plane, ShieldCheck, Package, MessageCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  BadgeCheck,
+  ChevronDown,
+  Phone,
+  ShieldCheck,
+  Truck,
+  Wallet,
+} from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
+import { useBrands } from '../../hooks/useBrands';
 import ProductCard from '../../components/ui/ProductCard';
 import AdSlot from '../../components/ui/AdSlot';
-import { dict, catLocal } from '../../lib/i18n';
+import { catLocal } from '../../lib/i18n';
+import { getProductViews } from '../../lib/productViews';
 import { useLang } from '../../context/LanguageContext';
 import Seo, { SITE_URL } from '../../components/seo/Seo';
-import BrandLogo from '../../components/ui/BrandLogo';
 import LoadError from '../../components/ui/LoadError';
+import FlashDealsSection from '../../components/flash/FlashDealsSection';
+import { useHeroProduct } from '../../hooks/useHeroProduct';
+import {
+  CONTACTS,
+  DEPOSIT_PERCENT,
+  DELIVERY_DAYS,
+  FAQ,
+  PROMISES,
+  STEPS,
+  faqSchema,
+  local,
+  storeSchema,
+} from '../../lib/trust';
 
-function DealStrip({ lang }) {
-  const d = dict(lang);
-  const amharic = lang !== 'or';
+const PROMISE_ICONS = {
+  deposit: Wallet,
+  delivery: Truck,
+  guarantee: ShieldCheck,
+  original: BadgeCheck,
+};
+
+/** The Amharic (or Oromo) line shown under an English one. */
+function Sub({ children, amharic, className = '' }) {
+  if (!children) return null;
+  return <span className={`block ${amharic ? 'font-amharic' : ''} ${className}`}>{children}</span>;
+}
+
+function SectionTitle({ en, sub, amharic, action }) {
   return (
-    <div className="bg-sale text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-center gap-2 text-center text-sm">
-        <span className="font-bold uppercase tracking-wider">
-          {d.upTo} 70% OFF
-        </span>
-        <span className="hidden sm:inline">·</span>
-        <span className={amharic ? 'font-amharic' : ''}>
-          {amharic
-            ? 'ኦሪጂናል የአሜሪካ ብራንድ ዕቃዎች — ቅናሽ በሁሉም ምድብ'
-            : 'Meeshaalee Brand Ameerikaa dhugaa — hirʼisa gosoota hundarratti'}
-        </span>
-        <Link
-          to="/category/clearance"
-          className="sm:ml-3 underline font-semibold"
-        >
-          Shop Clearance →
+    <div className="flex items-end justify-between gap-4 mb-6">
+      <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-ink">
+        {en}
+        <Sub amharic={amharic} className="text-sm md:text-base font-medium text-ink-muted mt-1 tracking-normal">
+          {sub}
+        </Sub>
+      </h2>
+      {action}
+    </div>
+  );
+}
+
+/** Pick one shoe with several angles for the hero (newest first). */
+function pickHeroProduct(products) {
+  const withViews = products
+    .map((product) => ({
+      product,
+      views: getProductViews(product).filter((v) => v.label !== 'lifestyle'),
+    }))
+    .filter((x) => x.views.length > 0);
+  const isShoe = (p) => /shoe|sneaker|boot/i.test(`${p.product_type} ${p.name} ${p.categories?.name_en || ''}`);
+  return (
+    withViews.find((x) => x.views.length >= 3 && isShoe(x.product)) ||
+    withViews.find((x) => x.views.length >= 2) ||
+    withViews[0] ||
+    null
+  );
+}
+
+const VIEW_NAMES = { front: 'Front', back: 'Back', side: 'Side', detail: 'Detail', other: 'View' };
+
+/** One shoe, turning through its photos (front, side, back…) every few seconds. */
+/** The admin's chosen hero product, with its photos (lifestyle shots skipped when there are others). */
+function featuredPick(product) {
+  if (!product) return null;
+  const all = getProductViews(product);
+  const clean = all.filter((v) => v.label !== 'lifestyle');
+  const views = clean.length ? clean : all;
+  return views.length ? { product, views } : null;
+}
+
+function HeroShowcase({ products }) {
+  const hero = useHeroProduct();
+  // Wait for the admin's choice so the hero does not jump from one shoe to another.
+  if (!hero.ready) return <div className="hidden md:block bg-white aspect-[5/6] animate-pulse" />;
+  const pick = featuredPick(hero.product) || pickHeroProduct(products);
+  return <HeroRotator key={pick?.product.id || 'none'} pick={pick} />;
+}
+
+function HeroRotator({ pick }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = pick?.views.length || 0;
+
+  useEffect(() => {
+    if (count < 2 || paused) return undefined;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), 2800);
+    return () => clearInterval(id);
+  }, [count, paused]);
+
+  // No photos (still loading or the request failed): show nothing rather than an empty box.
+  if (!pick) return null;
+  const { product, views } = pick;
+  const current = index % views.length;
+
+  return (
+    <div
+      className="bg-white p-4 sm:p-6"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <Link
+        to={`/products/${product.slug}`}
+        className="relative block aspect-[5/4] bg-[#f7f7f7] overflow-hidden no-underline"
+        aria-label={product.name}
+      >
+        {views.map((view, i) => (
+          <img
+            key={view.url}
+            src={view.url}
+            alt={i === current ? product.name : ''}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            className={`absolute inset-0 w-full h-full object-contain p-[10%] mix-blend-multiply transition-all duration-700 ease-out ${
+              i === current ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          />
+        ))}
+      </Link>
+      <div className="flex items-center justify-between gap-3 mt-4">
+        <Link to={`/products/${product.slug}`} className="min-w-0 no-underline group">
+          {product.brand && (
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{product.brand}</p>
+          )}
+          <p className="text-sm font-semibold text-ink truncate group-hover:underline">{product.name}</p>
         </Link>
+        {views.length > 1 && (
+          <div className="flex items-center gap-1.5 shrink-0" role="tablist" aria-label="Photo angles">
+            {views.map((view, i) => (
+              <button
+                key={view.url}
+                type="button"
+                role="tab"
+                aria-selected={i === current}
+                aria-label={VIEW_NAMES[view.label] || 'View'}
+                onClick={() => setIndex(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === current ? 'w-6 bg-ink' : 'w-1.5 bg-gray-300 hover:bg-gray-500'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -42,346 +171,293 @@ export default function HomePage() {
     categories,
     loading: categoriesLoading,
     error: categoriesError,
-    refetch: refetchCategories,
   } = useCategories();
   const {
     products,
+    loading: productsLoading,
     error: productsError,
-    refetch: refetchProducts,
   } = useProducts({ limit: 24 });
+  const { brands } = useBrands();
   const loadError = categoriesError || productsError;
   const { lang } = useLang();
-  const d = dict(lang);
   const amharic = lang !== 'or';
 
-  const featuredCats = tree.slice(0, 6);
-  const preview = tree.slice(0, 3);
-  const womenCat = categories.find((c) => c.slug === 'women');
-  const menCat = categories.find((c) => c.slug === 'men');
-  const description =
-    'Shop authentic American shoes, clothing and cosmetics in Ethiopia. Browse trusted USA brands, compare prices, choose sizes and colors, and send an inquiry.';
-  const structuredData = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      name: 'Abron Shop',
-      url: SITE_URL,
-      logo: `${SITE_URL}/brand-icon-512.png`,
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'Abron Shop',
-      alternateName: 'አብሮን ሱቅ',
-      url: SITE_URL,
-    },
-  ];
-
-  function shopCategoryBtnLabel(cat, enName, dictKey) {
-    const local = catLocal(cat, lang) || dict(lang)[dictKey];
-    return local ? `Shop ${enName} · ${local}` : `Shop ${enName}`;
-  }
-
-  function productsForCat(cat) {
-    const ids = [cat.id];
-    // Include direct children too, so the strip isn't empty when products
-    // are assigned to leaves.
-    const stack = [cat];
-    while (stack.length) {
-      const n = stack.pop();
-      (n.children || []).forEach((c) => {
-        ids.push(c.id);
-        stack.push(c);
-      });
-    }
-    return products.filter((p) => ids.includes(p.category_id)).slice(0, 4);
-  }
+  const inStock = products.filter((p) => p.in_stock !== false);
+  const newArrivals = (inStock.length >= 8 ? inStock : products).slice(0, 12);
+  const topBrands = [...brands]
+    .filter((b) => b.product_count > 0)
+    .sort((a, b) => b.product_count - a.product_count)
+    .slice(0, 12);
 
   return (
     <>
       <Seo
-        title="Shoes, Clothing & Cosmetics in Ethiopia | Abron Shop"
-        description={description}
+        title="American Shoes in Ethiopia – Original US Brands | Abron Shop"
+        description={`Original American shoes, clothing and perfume delivered in Ethiopia in about ${DELIVERY_DAYS} days. Nike, New Balance, Skechers and more. Pay only ${DEPOSIT_PERCENT}% to order, the rest on delivery.`}
         path="/"
-        jsonLd={structuredData}
+        jsonLd={[
+          storeSchema(SITE_URL),
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Abron Shop',
+            alternateName: 'አብሮን ሱቅ',
+            url: SITE_URL,
+          },
+          faqSchema(),
+        ]}
       />
-      <div>
-      <DealStrip lang={lang} />
 
-      {/* Hero */}
+      {/* A failed request (offline, server down) shows the retry first, where customers
+          look — never admin links. */}
+      {loadError && (
+        <div className="border-b border-gray-200">
+          <LoadError
+            title="Could not load products"
+            message={
+              loadError.isNetworkError
+                ? loadError.message
+                : 'Something went wrong while loading products. Please try again.'
+            }
+          />
+        </div>
+      )}
+
+      {/* Hero: what we sell + the payment promise, with real products */}
       <section className="bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-8 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <p className="inline-block bg-ink text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 mb-4">
-              🇺🇸 USA → 🇪🇹 Ethiopia · Direct
+            <p className="inline-flex items-center gap-2 bg-white border border-gray-200 text-[11px] font-bold uppercase tracking-wider px-3 py-1 mb-5">
+              🇺🇸 USA → 🇪🇹 Ethiopia
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink leading-[1.05]">
-              Shoes, Clothing & Cosmetics
-              <br />
-              <span className="text-sale">from the USA to Ethiopia.</span>
+              Original American Shoes,{' '}
+              <span className="text-sale">Delivered in Ethiopia.</span>
             </h1>
-            {amharic ? (
-              <p className="font-amharic text-xl md:text-2xl text-ink mt-4">
-                ከአሜሪካ ቀጥታ የሚመጡ <span className="text-sale">ኦሪጂናል ዕቃዎች።</span>
-              </p>
-            ) : (
-              <p className="text-xl md:text-2xl text-ink mt-4">
-                Meeshaalee dhugaa Ameerikaa irraa{' '}
-                <span className="text-sale">kallattiin dhufan.</span>
-              </p>
-            )}
-            <p className="text-sm md:text-base text-ink-soft mt-4 max-w-lg">
-              Browse, send an interest inquiry, and we handle sourcing, shipping
-              and delivery — no online checkout needed.
+            <Sub amharic={amharic} className="text-xl md:text-2xl text-ink mt-4 font-semibold">
+              {amharic
+                ? 'ኦሪጂናል የአሜሪካ ጫማዎች እና ልብሶች — እዚሁ ኢትዮጵያ'
+                : 'Kophee fi uffata Ameerikaa dhugaa — Itoophiyaa keessatti'}
+            </Sub>
+            <p className="text-base text-ink-soft mt-5 max-w-lg">
+              Pick what you like and send an inquiry. We call you to agree on everything. You pay{' '}
+              <b className="text-ink">only {DEPOSIT_PERCENT}%</b> to order, and the rest when it reaches you.
             </p>
-            <div className="flex flex-wrap gap-3 mt-6">
-              <Link
-                to="/category/women"
-                className={`bg-ink text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-black no-underline ${
-                  amharic ? 'font-amharic' : ''
-                }`}
+            <div className="flex flex-wrap gap-3 mt-7">
+              <a
+                href="#new-arrivals"
+                className="bg-ink text-white px-6 py-3.5 text-sm font-bold uppercase tracking-wider hover:bg-black no-underline inline-flex items-center gap-2"
               >
-                {shopCategoryBtnLabel(womenCat, 'Women', 'shopWomen')}
-              </Link>
-              <Link
-                to="/category/men"
-                className={`bg-white border border-ink text-ink px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-50 no-underline ${
-                  amharic ? 'font-amharic' : ''
-                }`}
+                Shop new arrivals <ArrowRight size={16} />
+              </a>
+              <a
+                href={`tel:${CONTACTS[0].tel}`}
+                className="bg-white border border-ink text-ink px-6 py-3.5 text-sm font-bold uppercase tracking-wider hover:bg-gray-50 no-underline inline-flex items-center gap-2"
               >
-                {shopCategoryBtnLabel(menCat, 'Men', 'shopMen')}
-              </Link>
+                <Phone size={16} /> {CONTACTS[0].display}
+              </a>
             </div>
           </div>
-          <div className="relative aspect-[4/3] md:aspect-square bg-gradient-to-br from-eth-green/10 via-eth-yellow/10 to-eth-red/10 overflow-hidden flex items-center justify-center">
-            <div className="text-center p-6 w-full">
-              <div className="bg-white/90 rounded-xl shadow-sm px-5 py-6 mb-4 mx-auto max-w-lg">
-                <BrandLogo className="w-full h-auto" loading="eager" />
-              </div>
-              <p
-                className={`text-2xl font-bold text-ink ${
-                  amharic ? 'font-amharic' : ''
-                }`}
-              >
-                {d.brandFull}
-              </p>
-              <p
-                className={`text-sm text-ink-soft mt-2 ${
-                  amharic ? 'font-amharic' : ''
-                }`}
-              >
-                {d.tagline}
-              </p>
-            </div>
-          </div>
+          <HeroShowcase products={newArrivals} />
         </div>
       </section>
 
-      {/* Hero ad strip — sits above the category tiles */}
-      <AdSlot placement="home_hero" className="mt-8" />
-
-      {/* Category tiles */}
-      {featuredCats.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-baseline justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-ink">
-              Shop by Category ·{' '}
-              <span className={amharic ? 'font-amharic' : ''}>
-                {d.shopByCategory}
-              </span>
-            </h2>
-            <Link
-              to="/categories"
-              className="text-xs font-bold uppercase tracking-wider text-ink hover:text-sale no-underline hidden sm:inline"
-            >
-              {d.viewAll} <ArrowRight size={12} className="inline" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-            {featuredCats.map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/category/${cat.slug}`}
-                className="group block bg-gray-100 aspect-square relative overflow-hidden no-underline"
-              >
-                {cat.image_url ? (
-                  <img
-                    src={cat.image_url}
-                    alt={cat.name_en}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-4xl md:text-5xl">
-                    {['👗', '👕', '👶', '👟', '👜', '💄', '🏠', '🏷️'][
-                      featuredCats.indexOf(cat) % 8
-                    ]}
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                  <p className="text-white text-sm font-bold uppercase tracking-wider">
-                    {cat.name_en}
-                  </p>
-                  {(() => {
-                    const local = lang === 'or' ? cat.name_or : cat.name_am;
-                    if (!local) return null;
-                    return (
-                      <p
-                        className={`text-white/90 text-xs ${
-                          amharic ? 'font-amharic' : ''
-                        }`}
-                      >
-                        {local}
-                      </p>
-                    );
-                  })()}
+      {/* Promise strip */}
+      <section className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-2 lg:grid-cols-4 gap-5">
+          {PROMISES.map((p) => {
+            const Icon = PROMISE_ICONS[p.key];
+            return (
+              <div key={p.key} className="flex gap-3">
+                <Icon size={26} className="text-sale shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-ink leading-snug">{p.en}</p>
+                  <Sub amharic={amharic} className="text-xs text-ink-muted mt-0.5">{local(p, lang)}</Sub>
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Flash deals: only shown while at least one deal is running */}
+      <FlashDealsSection amharic={amharic} />
+
+      {/* New arrivals: one even grid instead of half-empty category strips */}
+      <section id="new-arrivals" hidden={!!loadError} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-mt-32">
+        <SectionTitle
+          en="New Arrivals"
+          sub={amharic ? 'አዲስ የገቡ ዕቃዎች' : 'Meeshaalee haaraa'}
+          amharic={amharic}
+          action={
+            <Link to="/categories" className="text-xs font-bold uppercase tracking-wider text-ink hover:text-sale no-underline inline-flex items-center gap-1 shrink-0">
+              View all <ArrowRight size={12} />
+            </Link>
+          }
+        />
+        {productsLoading && products.length === 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+            {newArrivals.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* How ordering and payment work */}
+      <section className="bg-ink text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-center">
+            How you order — no risk
+            <Sub amharic={amharic} className="text-sm md:text-base font-medium text-white/70 mt-1">
+              {amharic ? 'እንዴት እንደሚያዝዙ — ያለ ስጋት' : 'Akkamitti ajajattu — sodaa malee'}
+            </Sub>
+          </h2>
+          <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+            {STEPS.map((step, i) => (
+              <li key={step.en} className="border border-white/15 p-5">
+                <span className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-sale text-white font-extrabold">
+                  {i + 1}
+                </span>
+                <h3 className="mt-4 font-bold text-lg leading-snug">{step.en}</h3>
+                <Sub amharic={amharic} className="text-xs text-white/60 mt-0.5">{local(step, lang)}</Sub>
+                <p className="text-sm text-white/80 mt-3 leading-relaxed">{step.desc}</p>
+              </li>
+            ))}
+          </ol>
+          <p className="text-center text-sm text-white/70 mt-8">
+            You never pay online, and you never pay before we have talked.
+          </p>
+        </div>
+      </section>
+
+      <AdSlot placement="home_hero" className="mt-10" />
+
+      {/* Shop by brand — brand pages are what people find on Google ("Nike Ethiopia") */}
+      {topBrands.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <SectionTitle
+            en="Shop by Brand"
+            sub={amharic ? 'በብራንድ ይግዙ' : 'Brand-n bitadhaa'}
+            amharic={amharic}
+            action={
+              <Link to="/brands" className="text-xs font-bold uppercase tracking-wider text-ink hover:text-sale no-underline inline-flex items-center gap-1 shrink-0">
+                All brands <ArrowRight size={12} />
+              </Link>
+            }
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {topBrands.map((b) => (
+              <Link
+                key={b.slug}
+                to={`/brands/${b.slug}`}
+                className="border border-gray-200 bg-white px-4 py-5 text-center no-underline hover:border-ink transition-colors"
+              >
+                <p className="font-extrabold uppercase tracking-wider text-ink text-sm">{b.name}</p>
+                <p className="text-[11px] text-ink-muted mt-1">
+                  {b.product_count} {b.product_count === 1 ? 'item' : 'items'}
+                </p>
               </Link>
             ))}
           </div>
         </section>
       )}
 
-      {/* How it works */}
-      <section className="bg-white py-12 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl md:text-2xl font-bold text-ink text-center mb-2">
-            How It Works ·{' '}
-            <span className={amharic ? 'font-amharic' : ''}>
-              {amharic ? 'እንዴት እንደሚሰራ' : 'Akkamitti Hojjeta'}
-            </span>
-          </h2>
-          <p
-            className={`text-sm text-ink-muted text-center mb-10 ${
-              amharic ? 'font-amharic' : ''
-            }`}
-          >
-            {amharic
-              ? 'በሶስት ቀላል ደረጃዎች የሚወዱትን ዕቃ ያግኙ'
-              : 'Tarkaanfii salphaa sadiin meeshaa jaallattan argadhaa'}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Package,
-                title: 'Browse',
-                am: 'ይመልከቱ',
-                or: 'Ilaali',
-                desc: 'Explore authentic American brands across every category.',
-              },
-              {
-                icon: MessageCircle,
-                title: 'Inquire',
-                am: 'ጥያቄ ይላኩ',
-                or: 'Gaafadhu',
-                desc: 'Leave your name, phone, and Telegram — no checkout required.',
-              },
-              {
-                icon: Plane,
-                title: 'We Ship',
-                am: 'እኛ እንልካለን',
-                or: 'Nuti Ergina',
-                desc: 'We source from the USA and ship directly to Ethiopia.',
-              },
-              {
-                icon: ShieldCheck,
-                title: 'Receive',
-                am: 'ይቀበሉ',
-                or: 'Fudhadhu',
-                desc: '100% authentic, delivered to your door.',
-              },
-            ].map((step, i) => (
-              <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-ink text-white mb-4">
-                  <step.icon size={26} />
-                </div>
-                <h3 className="font-bold uppercase tracking-wider text-ink text-sm">
-                  {step.title}
-                </h3>
-                <p
-                  className={`text-xs text-sale font-semibold mt-0.5 ${
-                    amharic ? 'font-amharic' : ''
-                  }`}
-                >
-                  {amharic ? step.am : step.or}
-                </p>
-                <p className="text-sm text-ink-soft mt-2">{step.desc}</p>
-              </div>
+      {/* Shop by category — same style for every tile */}
+      {tree.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          <SectionTitle en="Shop by Category" sub={amharic ? 'በምድብ ይግዙ' : 'Gosaan bitadhaa'} amharic={amharic} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {tree.slice(0, 8).map((cat) => (
+              <Link
+                key={cat.id}
+                to={`/category/${cat.slug}`}
+                className="group bg-gray-100 px-5 py-6 no-underline flex items-center justify-between hover:bg-ink transition-colors"
+              >
+                <span>
+                  <span className="block font-extrabold uppercase tracking-wider text-ink group-hover:text-white">
+                    {cat.name_en}
+                  </span>
+                  <Sub amharic={amharic} className="text-xs text-ink-muted group-hover:text-white/70 mt-0.5">
+                    {catLocal(cat, lang)}
+                  </Sub>
+                </span>
+                <ArrowRight size={18} className="text-ink group-hover:text-white" />
+              </Link>
             ))}
+          </div>
+        </section>
+      )}
+
+      <AdSlot placement="home_strip" className="pb-12" />
+
+      {/* Guarantee + contact */}
+      <section className="bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            <ShieldCheck size={36} className="text-sale" />
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-ink mt-3">
+              If anything goes wrong, it is on us.
+              <Sub amharic={amharic} className="text-sm md:text-base font-medium text-ink-muted mt-1">
+                {amharic ? 'ማንኛውም ችግር ቢፈጠር ኃላፊነቱ የእኛ ነው።' : 'Rakkoon kamiyyuu yoo uumame, itti gaafatamummaan kan keenya.'}
+              </Sub>
+            </h2>
+            <p className="text-ink-soft mt-4 max-w-lg">
+              Wrong size, damaged item or a late delivery — call us and we make it right at no extra cost to
+              you. You only pay {DEPOSIT_PERCENT}% before delivery, so most of your money stays with you until
+              you have the item in your hands.
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-muted">Talk to us</p>
+            <div className="mt-3 divide-y divide-gray-100">
+              {CONTACTS.map((c) => (
+                <a key={c.tel} href={`tel:${c.tel}`} className="flex items-center gap-4 py-4 no-underline group">
+                  <span className="w-11 h-11 rounded-full bg-ink text-white flex items-center justify-center shrink-0">
+                    <Phone size={18} />
+                  </span>
+                  <span>
+                    <span className="block text-xs text-ink-muted">{c.label}</span>
+                    <span className="block text-lg font-bold text-ink group-hover:underline">{c.display}</span>
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Inline ad — sits between editorial content and product strips */}
-      <AdSlot placement="home_strip" className="py-8" />
+      {/* FAQ — also marked up for Google */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <SectionTitle en="Questions & Answers" sub={amharic ? 'ጥያቄና መልስ' : 'Gaaffii fi deebii'} amharic={amharic} />
+        <div className="divide-y divide-gray-200 border-y border-gray-200">
+          {FAQ.map((item) => (
+            <details key={item.q} className="group py-4">
+              <summary className="flex items-start justify-between gap-4 cursor-pointer list-none">
+                <span>
+                  <span className="block font-bold text-ink">{item.q}</span>
+                  <Sub amharic={amharic} className="text-xs text-ink-muted mt-0.5">{local(item, lang)}</Sub>
+                </span>
+                <ChevronDown size={18} className="shrink-0 mt-1 transition-transform group-open:rotate-180" />
+              </summary>
+              <p className="text-sm text-ink-soft mt-3 leading-relaxed">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
 
-      {/* Per-category product strips */}
-      {preview.map((cat) => {
-        const items = productsForCat(cat);
-        if (items.length === 0) return null;
-        return (
-          <section
-            key={cat.id}
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
-          >
-            <div className="flex items-baseline justify-between mb-5 border-b border-gray-200 pb-2">
-              <h2 className="text-lg md:text-xl font-bold text-ink">
-                Latest in {cat.name_en}
-                {(() => {
-                  const local = lang === 'or' ? cat.name_or : cat.name_am;
-                  if (!local) return null;
-                  return (
-                    <span
-                      className={`text-ink-muted ml-2 font-normal ${
-                        amharic ? 'font-amharic' : ''
-                      }`}
-                    >
-                      · {local}
-                    </span>
-                  );
-                })()}
-              </h2>
-              <Link
-                to={`/category/${cat.slug}`}
-                className="text-xs font-bold uppercase tracking-wider text-ink hover:text-sale no-underline inline-flex items-center gap-1"
-              >
-                {d.viewAll} <ArrowRight size={12} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-              {items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Customers never see admin links here: a failed request (offline, server down)
-          shows a retry, and an empty catalogue shows a neutral message. */}
-      {loadError ? (
-        <LoadError
-          title="Could not load products"
-          message={
-            loadError.isNetworkError
-              ? loadError.message
-              : 'Something went wrong while loading products. Please try again.'
-          }
-          onRetry={() => {
-            if (categoriesError) refetchCategories();
-            if (productsError) refetchProducts();
-          }}
-        />
-      ) : (
-        !categoriesLoading &&
-        categories.length === 0 && (
-          <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-            <p className="text-sm text-ink-muted">
-              New products are coming soon. Please check back shortly.
-            </p>
-          </section>
-        )
+      {/* An empty catalogue shows a neutral message (never admin links). */}
+      {!loadError && !categoriesLoading && categories.length === 0 && (
+        <section className="max-w-3xl mx-auto px-4 py-20 text-center">
+          <p className="text-sm text-ink-muted">New products are coming soon. Please check back shortly.</p>
+        </section>
       )}
-      </div>
     </>
   );
 }

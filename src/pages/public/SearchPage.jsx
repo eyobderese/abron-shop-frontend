@@ -15,7 +15,7 @@ export default function SearchPage() {
   const d = dict(lang);
   const amharic = lang !== 'or';
 
-  const { products, loading, error, refetch } = useProducts({ search: q });
+  const { products, loading, error } = useProducts({ search: q });
 
   return (
     <>
@@ -53,7 +53,6 @@ export default function SearchPage() {
         <LoadError
           title="Could not load search results"
           message={error.message}
-          onRetry={refetch}
         />
       ) : loading ? (
         <LoadingSpinner />

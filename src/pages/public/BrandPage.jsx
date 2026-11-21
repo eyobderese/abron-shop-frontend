@@ -8,7 +8,7 @@ import { useBrandProducts } from '../../hooks/useBrands';
 
 export default function BrandPage() {
   const { slug } = useParams();
-  const { brand, products, loading, error, refetch } = useBrandProducts(slug);
+  const { brand, products, loading, error } = useBrandProducts(slug);
 
   if (loading) return <LoadingSpinner />;
 
@@ -28,7 +28,7 @@ export default function BrandPage() {
     return (
       <>
         <Seo title="Unable to Load Brand" description="The brand could not be loaded." canonical={false} noindex />
-        <LoadError title="Could not load this brand" message={error.message} onRetry={refetch} />
+        <LoadError title="Could not load this brand" message={error.message} />
       </>
     );
   }
