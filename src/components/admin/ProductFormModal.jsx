@@ -4,6 +4,7 @@ import { X, Upload, ChevronUp, ChevronDown, Languages, Plus } from 'lucide-react
 import toast from 'react-hot-toast';
 import { api } from '../../lib/apiClient';
 import { useAdminCategories } from '../../hooks/useCategories';
+import FlashDealFields, { flashPayload, toLocalInput } from './FlashDealFields';
 import {
   VIEW_LABEL_OPTIONS,
   defaultViewLabel,
@@ -183,6 +184,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           variant_sort_order: isDuplicate ? 0 : product.variant_sort_order || 0,
           price: product.price ?? '',
           was_price: product.was_price ?? '',
+          flash_price: isDuplicate ? '' : product.flash_price ?? '',
+          flash_starts_at: isDuplicate ? '' : toLocalInput(product.flash_starts_at),
+          flash_ends_at: isDuplicate ? '' : toLocalInput(product.flash_ends_at),
           currency: product.currency || DEFAULT_CURRENCY,
           size_type: product.size_type || 'NONE',
           sizes: cleanSizes(product.sizes),
@@ -206,6 +210,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           variant_sort_order: 0,
           price: '',
           was_price: '',
+          flash_price: '',
+          flash_starts_at: '',
+          flash_ends_at: '',
           currency: DEFAULT_CURRENCY,
           size_type: 'NONE',
           sizes: [],
@@ -366,6 +373,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
         variant_sort_order: Number(data.variant_sort_order) || 0,
         price: Number(data.price),
         was_price: data.was_price === '' ? null : Number(data.was_price),
+        ...flashPayload(data),
         currency: data.currency || DEFAULT_CURRENCY,
         size_type: data.size_type || 'NONE',
         sizes: data.size_type === 'NONE' ? [] : sizes,
@@ -755,6 +763,14 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             />
             <span className="text-sm">In stock</span>
           </label>
+
+          <FlashDealFields
+            control={control}
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            inputClass={inputClass}
+          />
 
           <div className="border border-gray-200 p-4 space-y-3">
             <div>

@@ -3,6 +3,8 @@ import { useCategories } from '../../hooks/useCategories';
 import { catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
 import BrandLogo from '../ui/BrandLogo';
+import { Phone } from 'lucide-react';
+import { CONTACTS, DEPOSIT_PERCENT, DELIVERY_DAYS } from '../../lib/trust';
 
 export default function Footer() {
   const { tree } = useCategories();
@@ -33,10 +35,20 @@ export default function Footer() {
                 ? 'ከአሜሪካ ቀጥታ ወደ ኢትዮጵያ የሚመጡ ኦሪጂናል የሞዴል ዕቃዎች።'
                 : 'Meeshaalee dhugaa Ameerikaa irraa kallattiin Itoophiyaa dhufan.'}
             </p>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Authentic American brands delivered to Ethiopia. Browse, inquire,
-              and we handle sourcing + shipping.
+            <p className="text-xs text-gray-300 mt-3 leading-relaxed">
+              Original American brands delivered in Ethiopia in about {DELIVERY_DAYS} days. Pay{' '}
+              {DEPOSIT_PERCENT}% to order, the rest on delivery. If anything goes wrong, it is on us.
             </p>
+            <ul className="mt-3 space-y-1">
+              {CONTACTS.map((c) => (
+                <li key={c.tel}>
+                  <a href={`tel:${c.tel}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white no-underline hover:underline">
+                    <Phone size={13} /> {c.display}
+                    <span className="text-xs font-normal text-gray-400">{c.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
             <Link
               to="/brands"
               className="mt-3 inline-block text-xs font-bold uppercase tracking-wider text-white underline"

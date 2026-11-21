@@ -195,6 +195,14 @@ export default function AdminProductsPage() {
                               {formatMoney(product.was_price, productCurrency(product))}
                             </span>
                           )}
+                          {product.flash_deal && (
+                            <span
+                              className="block mt-1 text-[11px] font-bold text-orange-600"
+                              title={`Flash deal ends ${new Date(product.flash_deal.ends_at).toLocaleString()}`}
+                            >
+                              ⚡ Flash {formatMoney(product.flash_deal.price, productCurrency(product))}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <span
