@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, ChevronRight, Phone } from 'lucide-react';
+import { CONTACTS, DEPOSIT_PERCENT, DELIVERY_DAYS } from '../../lib/trust';
 import { useCategories } from '../../hooks/useCategories';
 import { LOCALES, catLabel, dict } from '../../lib/i18n';
 import { useLang } from '../../context/LanguageContext';
@@ -171,9 +172,6 @@ export default function Navbar() {
   const { lang } = useLang();
   const d = dict(lang);
 
-  const topBarAmharic = '🇺🇸 → 🇪🇹 ከአሜሪካ ወደ ኢትዮጵያ — ቀጥታ ዕቃ';
-  const topBarOromo = '🇺🇸 → 🇪🇹 USA → Itoophiyaa — Kallattiin';
-
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -205,13 +203,14 @@ export default function Navbar() {
       {/* Top utility bar */}
       <div className="bg-ink text-white text-[11px] tracking-wider">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
-          <span className={lang === 'or' ? '' : 'font-amharic'}>
-            {lang === 'or' ? topBarOromo : topBarAmharic}
+          <span className="truncate">
+            <b>Pay only {DEPOSIT_PERCENT}% to order</b>
+            <span className="hidden md:inline"> · rest on delivery · delivered in about {DELIVERY_DAYS} days</span>
           </span>
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline">
-              Browse · Inquire · We handle the rest
-            </span>
+          <div className="flex items-center gap-3 shrink-0">
+            <a href={`tel:${CONTACTS[0].tel}`} className="inline-flex items-center gap-1 text-white no-underline hover:underline">
+              <Phone size={12} /> {CONTACTS[0].display}
+            </a>
             <LangSwitcher />
           </div>
         </div>
