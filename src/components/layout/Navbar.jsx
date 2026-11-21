@@ -203,14 +203,23 @@ export default function Navbar() {
       {/* Top utility bar */}
       <div className="bg-ink text-white text-[11px] tracking-wider">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
-          <span className="truncate">
+          {/* On phones the promise is in the hero, so the bar keeps room for both numbers. */}
+          <span className="hidden md:block truncate">
             <b>Pay only {DEPOSIT_PERCENT}% to order</b>
-            <span className="hidden md:inline"> · rest on delivery · delivered in about {DELIVERY_DAYS} days</span>
+            <span className="hidden lg:inline"> · rest on delivery · delivered in about {DELIVERY_DAYS} days</span>
           </span>
-          <div className="flex items-center gap-3 shrink-0">
-            <a href={`tel:${CONTACTS[0].tel}`} className="inline-flex items-center gap-1 text-white no-underline hover:underline">
-              <Phone size={12} /> {CONTACTS[0].display}
-            </a>
+          <div className="flex items-center justify-between md:justify-end gap-x-3 gap-y-1 flex-wrap w-full md:w-auto shrink-0">
+            {CONTACTS.map((c) => (
+              <a
+                key={c.tel}
+                href={`tel:${c.tel}`}
+                title={`Call us (${c.label})`}
+                className="inline-flex items-center gap-1 text-white no-underline hover:underline whitespace-nowrap"
+              >
+                <Phone size={12} /> {c.display}
+                <span className="text-white/60">{c.label === 'USA' ? 'US' : 'ET'}</span>
+              </a>
+            ))}
             <LangSwitcher />
           </div>
         </div>

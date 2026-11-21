@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -58,27 +59,91 @@ function SectionTitle({ en, sub, amharic, action }) {
   );
 }
 
-function HeroCollage({ products }) {
-  const pics = products
-    .map((p) => ({ product: p, url: getProductViews(p)[0]?.url }))
-    .filter((x) => x.url)
-    .slice(0, 3);
-  // No photos (still loading or the request failed): show nothing rather than an empty white box.
-  if (pics.length === 0) return null;
-  const [main, ...rest] = pics;
+/** Pick one shoe with several angles for the hero (newest first). */
+function pickHeroProduct(products) {
+  const withViews = products
+    .map((product) => ({
+      product,
+      views: getProductViews(product).filter((v) => v.label !== 'lifestyle'),
+    }))
+    .filter((x) => x.views.length > 0);
+  const isShoe = (p) => /shoe|sneaker|boot/i.test(`${p.product_type} ${p.name} ${p.categories?.name_en || ''}`);
   return (
-    <div className="grid grid-cols-2 gap-3">
+    withViews.find((x) => x.views.length >= 3 && isShoe(x.product)) ||
+    withViews.find((x) => x.views.length >= 2) ||
+    withViews[0] ||
+    null
+  );
+}
+
+const VIEW_NAMES = { front: 'Front', back: 'Back', side: 'Side', detail: 'Detail', other: 'View' };
+
+/** One shoe, turning through its photos (front, side, back…) every few seconds. */
+function HeroShowcase({ products }) {
+  const pick = pickHeroProduct(products);
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = pick?.views.length || 0;
+
+  useEffect(() => {
+    if (count < 2 || paused) return undefined;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), 2800);
+    return () => clearInterval(id);
+  }, [count, paused]);
+
+  // No photos (still loading or the request failed): show nothing rather than an empty box.
+  if (!pick) return null;
+  const { product, views } = pick;
+  const current = index % views.length;
+
+  return (
+    <div
+      className="bg-white p-4 sm:p-6"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <Link
-        to={`/products/${main.product.slug}`}
-        className={`bg-white flex items-center justify-center p-6 ${rest.length ? 'row-span-2 aspect-[3/4] md:aspect-auto' : 'col-span-2 aspect-[4/3]'}`}
+        to={`/products/${product.slug}`}
+        className="relative block aspect-[5/4] bg-[#f7f7f7] overflow-hidden no-underline"
+        aria-label={product.name}
       >
-        <img src={main.url} alt={main.product.name} className="max-h-full w-full object-contain mix-blend-multiply" loading="eager" />
+        {views.map((view, i) => (
+          <img
+            key={view.url}
+            src={view.url}
+            alt={i === current ? product.name : ''}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            className={`absolute inset-0 w-full h-full object-contain p-[10%] mix-blend-multiply transition-all duration-700 ease-out ${
+              i === current ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          />
+        ))}
       </Link>
-      {rest.map(({ product, url }) => (
-        <Link key={product.id} to={`/products/${product.slug}`} className="bg-white aspect-square flex items-center justify-center p-4">
-          <img src={url} alt={product.name} className="max-h-full w-full object-contain mix-blend-multiply" loading="eager" />
+      <div className="flex items-center justify-between gap-3 mt-4">
+        <Link to={`/products/${product.slug}`} className="min-w-0 no-underline group">
+          {product.brand && (
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{product.brand}</p>
+          )}
+          <p className="text-sm font-semibold text-ink truncate group-hover:underline">{product.name}</p>
         </Link>
-      ))}
+        {views.length > 1 && (
+          <div className="flex items-center gap-1.5 shrink-0" role="tablist" aria-label="Photo angles">
+            {views.map((view, i) => (
+              <button
+                key={view.url}
+                type="button"
+                role="tab"
+                aria-selected={i === current}
+                aria-label={VIEW_NAMES[view.label] || 'View'}
+                onClick={() => setIndex(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === current ? 'w-6 bg-ink' : 'w-1.5 bg-gray-300 hover:bg-gray-500'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -176,7 +241,7 @@ export default function HomePage() {
               </a>
             </div>
           </div>
-          <HeroCollage products={newArrivals} />
+          <HeroShowcase products={newArrivals} />
         </div>
       </section>
 
